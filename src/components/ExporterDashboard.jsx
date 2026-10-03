@@ -540,6 +540,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
     const [contactOpen, setContactOpen] = useState(false);
     const [loadingTransactions, setLoadingTransactions] = useState(false);
     const [transactions, setTransactions] = useState([]);
+    const [clearanceUsage, setClearanceUsage] = useState([]);
     const [customerInvoices, setCustomerInvoices] = useState([]);
     const [editProfileForm, setEditProfileForm] = useState({
         firstName: '',
@@ -630,9 +631,10 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
         setPaymentsOpen(true);
         setLoadingTransactions(true);
 
-        const [{ data, error }, { data: invoiceData, error: invoiceError }] = await Promise.all([
+        const [{ data, error }, { data: invoiceData, error: invoiceError }, { data: usageData, error: usageError }] = await Promise.all([
             supabase.from('credit_transactions').select('id, transaction_type, credits, amount, currency, description, status, created_at').eq('profile_id', userId).order('created_at', { ascending: false }).limit(20),
-            supabase.from('customer_invoices').select('*').eq('profile_id', userId).order('created_at', { ascending: false })
+            supabase.from('customer_invoices').select('*').eq('profile_id', userId).order('created_at', { ascending: false }),
+            supabase.from('clearance_transactions').select('id, reference_id, plan_type, transaction_type, amount, balance_before, balance_after, reason, created_at').eq('profile_id', userId).order('created_at', { ascending: false }).limit(100)
         ]);
 
         setLoadingTransactions(false);
@@ -645,6 +647,8 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
         setTransactions(data || []);
         if (invoiceError) showToast(invoiceError.message, 'error');
         else setCustomerInvoices(invoiceData || []);
+        if (usageError) showToast(usageError.message, 'error');
+        else setClearanceUsage(usageData || []);
     };
 
     const openUploadedInvoice = async (invoice) => {
@@ -1848,6 +1852,22 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                             <div style={{ border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr .7fr', gap: '12px', padding: '11px 16px', background: '#F8FAFC', color: '#475569', fontSize: '12px', fontWeight: '800' }}><span>Invoice</span><span>Date</span><span>Download</span></div>
                                 {customerInvoices.length === 0 ? <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94A3B8', fontSize: '13px' }}>No invoices uploaded yet.</div> : customerInvoices.map((invoice) => <div key={invoice.id} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr .7fr', gap: '12px', padding: '12px 16px', borderTop: '1px solid #E2E8F0', alignItems: 'center', color: '#475569', fontSize: '13px' }}><strong>{invoice.invoice_number}</strong><span>{formatDate(invoice.created_at)}</span><button type="button" onClick={() => openUploadedInvoice(invoice)} style={{ width: 'fit-content', border: '1px solid rgba(73,168,216,.32)', background: 'rgba(73,168,216,.1)', color: '#2789B8', borderRadius: '6px', padding: '6px 9px', fontWeight: '800' }}>Download</button></div>)}
+                            </div>
+                        </section>
+
+                        <section style={{ marginTop: '28px' }}>
+                            <h3 style={{ margin: '0 0 12px 0', color: '#0F172A', fontSize: '16px' }}>Clearance Usage</h3>
+                            <div style={{ border: '1px solid #E2E8F0', borderRadius: '8px', overflowX: 'auto' }}>
+                                <div style={{ minWidth: '720px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 1fr 1.5fr 0.7fr 0.8fr', gap: '14px', padding: '11px 16px', background: '#F8FAFC', color: '#475569', fontSize: '12px', fontWeight: '800' }}>
+                                        <span>Date & Time</span><span>Reference</span><span>Plan</span><span>Description</span><span>Change</span><span>Balance</span>
+                                    </div>
+                                    {loadingTransactions ? <div style={{ padding: '24px 16px', textAlign: 'center', color: '#64748B', fontSize: '13px' }}>Loading usage...</div> : clearanceUsage.length === 0 ? <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94A3B8', fontSize: '13px' }}>No clearance usage recorded yet.</div> : clearanceUsage.map((entry) => (
+                                        <div key={entry.id} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 1fr 1.5fr 0.7fr 0.8fr', gap: '14px', padding: '12px 16px', borderTop: '1px solid #E2E8F0', alignItems: 'center', color: '#475569', fontSize: '12px' }}>
+                                            <span>{formatDateTimeIST(entry.created_at)}</span><strong style={{ color: '#0F172A' }}>{entry.reference_id || '-'}</strong><span style={{ textTransform: 'capitalize' }}>{entry.plan_type || '-'}</span><span>{entry.reason || 'Clearance used'}</span><strong style={{ color: entry.amount < 0 ? '#B91C1C' : '#15803D' }}>{entry.amount > 0 ? '+' : ''}{entry.amount}</strong><strong>{entry.balance_after ?? '-'}</strong>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </section>
 

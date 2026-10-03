@@ -159,7 +159,13 @@ const softBlueButtonStyle = {
 function DataTabIcon({ type }) {
     return (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            {type === 'issue' ? (
+            {type === 'usage' ? (
+                <>
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M8.5 7.5h7M8.5 10.5h7" />
+                    <path d="M8.5 7.5h2.7a3 3 0 0 1 0 6H8.5l5 4.5" />
+                </>
+            ) : type === 'issue' ? (
                 <>
                     <circle cx="12" cy="12" r="9" />
                     <path d="M12 7v6" />
@@ -201,6 +207,7 @@ export default function ManagerDashboard({ profile, onLogout }) {
     const [freeCreditGrants, setFreeCreditGrants] = useState([]);
     const [planActivations, setPlanActivations] = useState([]);
     const [customerInvoices, setCustomerInvoices] = useState([]);
+    const [clearanceUsage, setClearanceUsage] = useState([]);
     const [selectedCustomerId, setSelectedCustomerId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('All');
@@ -253,7 +260,8 @@ export default function ManagerDashboard({ profile, onLogout }) {
             { data: issueData, error: issuesError },
             { data: grantData, error: grantsError },
             { data: activationData, error: activationsError },
-            { data: invoiceData, error: invoicesError }
+            { data: invoiceData, error: invoicesError },
+            { data: usageData, error: usageError }
         ] = await Promise.all([
             supabase.from('documents').select('*').order('submitted_at', { ascending: false }),
             supabase.from('clearance_tracks').select('id, profile_id, reference_id, customer_name, destination_country, invoice_currency, ad_bank_name, payment_method, created_at, updated_at').order('created_at', { ascending: false }),
@@ -262,11 +270,12 @@ export default function ManagerDashboard({ profile, onLogout }) {
             supabase.from('customer_issues').select('id, profile_id, full_name, company_name, email, mobile_number, comments, status, created_at, viewed_at').order('created_at', { ascending: false }),
             supabase.from('free_credit_grants').select('id, profile_id, credits, created_at').order('created_at', { ascending: false }),
             supabase.from('customer_plan_activations').select('*').order('created_at', { ascending: false }),
-            supabase.from('customer_invoices').select('*').order('created_at', { ascending: false })
+            supabase.from('customer_invoices').select('*').order('created_at', { ascending: false }),
+            supabase.from('clearance_transactions').select('*').order('created_at', { ascending: false }).limit(1000)
         ]);
         setLoading(false);
 
-        const error = documentsError || tracksError || profilesError || leadsError || issuesError || grantsError || activationsError || invoicesError;
+        const error = documentsError || tracksError || profilesError || leadsError || issuesError || grantsError || activationsError || invoicesError || usageError;
         setQueryDiagnostics({
             count: trackData?.length || 0,
             documentCount: documentData?.length || 0,
@@ -297,6 +306,9 @@ export default function ManagerDashboard({ profile, onLogout }) {
 
         if (invoicesError) showToast(invoicesError.message, 'error');
         else setCustomerInvoices(invoiceData || []);
+
+        if (usageError) showToast(usageError.message, 'error');
+        else setClearanceUsage(usageData || []);
     };
 
     useEffect(() => {
@@ -797,6 +809,10 @@ export default function ManagerDashboard({ profile, onLogout }) {
                         <p style={{ margin: 0, color: '#64748B', fontSize: '15px' }}>Manage clearance tracks, assignments, verifier activity, and escalations.</p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                        <button type="button" onClick={() => setDataView('usage')} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', height: '38px', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0 13px', background: '#FFFFFF', color: '#334155', cursor: 'pointer', fontSize: '13px', fontWeight: '800', whiteSpace: 'nowrap' }}>
+                            <DataTabIcon type="usage" />
+                            Clearance Logs
+                        </button>
                         <button type="button" onClick={openCustomerIssues} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', height: '38px', border: hasNewCustomerIssues ? '1px solid #DC2626' : '1px solid #CBD5E1', borderRadius: '8px', padding: '0 13px', background: hasNewCustomerIssues ? '#FEE2E2' : '#FFFFFF', color: hasNewCustomerIssues ? '#991B1B' : '#334155', cursor: 'pointer', fontSize: '13px', fontWeight: '800', whiteSpace: 'nowrap' }}>
                             <DataTabIcon type="issue" />
                             Issues
@@ -963,16 +979,26 @@ export default function ManagerDashboard({ profile, onLogout }) {
                     <div style={{ width: 'min(960px, calc(100vw - 48px))', maxHeight: '88vh', background: '#FFFFFF', borderRadius: '8px', boxShadow: '0 24px 60px rgba(15,23,42,0.24)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '22px 26px', borderBottom: '1px solid #E2E8F0' }}>
                             <div>
-                                <h2 id="manager-data-title" style={{ margin: '0 0 5px 0', color: '#0F172A', fontSize: '21px' }}>{dataView === 'issues' ? 'Issues' : dataView === 'leads' ? 'Leads' : dataView === 'verifiers' ? 'Verifier Data' : 'Customer Data'}</h2>
+                                <h2 id="manager-data-title" style={{ margin: '0 0 5px 0', color: '#0F172A', fontSize: '21px' }}>{dataView === 'usage' ? 'Clearance Logs' : dataView === 'issues' ? 'Issues' : dataView === 'leads' ? 'Leads' : dataView === 'verifiers' ? 'Verifier Data' : 'Customer Data'}</h2>
                                 <p style={{ margin: 0, color: '#64748B', fontSize: '13px' }}>
-                                    {dataView === 'issues' ? `${customerIssues.length} reported issues` : dataView === 'leads' ? `${leads.length} customer inquiries` : dataView === 'verifiers' ? `${verifierData.length} verifier accounts` : `${customerData.length} exporter accounts`}
+                                    {dataView === 'usage' ? `${clearanceUsage.length} clearance events` : dataView === 'issues' ? `${customerIssues.length} reported issues` : dataView === 'leads' ? `${leads.length} customer inquiries` : dataView === 'verifiers' ? `${verifierData.length} verifier accounts` : `${customerData.length} exporter accounts`}
                                 </p>
                             </div>
-                            <button type="button" aria-label={`Close ${dataView === 'issues' ? 'Issues' : dataView === 'leads' ? 'Leads' : dataView === 'verifiers' ? 'Verifier Data' : 'Customer Data'}`} onClick={() => setDataView(null)} style={{ width: '34px', height: '34px', border: '1px solid #E2E8F0', borderRadius: '6px', background: '#FFFFFF', color: '#475569', cursor: 'pointer', fontSize: '22px', lineHeight: 1 }}>&times;</button>
+                            <button type="button" aria-label="Close data view" onClick={() => setDataView(null)} style={{ width: '34px', height: '34px', border: '1px solid #E2E8F0', borderRadius: '6px', background: '#FFFFFF', color: '#475569', cursor: 'pointer', fontSize: '22px', lineHeight: 1 }}>&times;</button>
                         </div>
 
                         <div style={{ padding: '20px 24px 26px', overflow: 'auto' }}>
-                            {dataView === 'issues' ? (
+                            {dataView === 'usage' ? (
+                                <div style={{ minWidth: '1050px', border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 1.2fr 1.35fr 1fr .75fr 1.5fr .55fr .65fr 1.15fr', gap: '12px', padding: '12px 15px', background: '#F8FAFC', color: '#475569', fontSize: '12px', fontWeight: '800' }}>
+                                        <span>Customer</span><span>Company</span><span>Email</span><span>Reference</span><span>Plan</span><span>Description</span><span>Change</span><span>Balance</span><span>Date & Time</span>
+                                    </div>
+                                    {clearanceUsage.length === 0 ? <div style={{ padding: '36px 16px', textAlign: 'center', color: '#94A3B8', fontSize: '13px' }}>No clearance usage recorded.</div> : clearanceUsage.map((entry) => {
+                                        const customer = profileById.get(entry.profile_id);
+                                        return <div key={entry.id} style={{ display: 'grid', gridTemplateColumns: '1.15fr 1.2fr 1.35fr 1fr .75fr 1.5fr .55fr .65fr 1.15fr', gap: '12px', padding: '13px 15px', borderTop: '1px solid #E2E8F0', alignItems: 'center', color: '#475569', fontSize: '12px' }}><strong style={{ color: '#0F172A' }}>{entry.customer_name_snapshot || `${customer?.first_name || ''} ${customer?.last_name || ''}`.trim() || 'Deleted customer'}</strong><span>{entry.company_name_snapshot || customer?.company_name || '-'}</span><span style={{ overflowWrap: 'anywhere' }}>{entry.email_snapshot || customer?.email || '-'}</span><strong>{entry.reference_id || '-'}</strong><span style={{ textTransform: 'capitalize' }}>{entry.plan_type || '-'}</span><span>{entry.reason || 'Clearance used'}</span><strong style={{ color: entry.amount < 0 ? '#B91C1C' : '#15803D' }}>{entry.amount > 0 ? '+' : ''}{entry.amount}</strong><strong>{entry.balance_after ?? '-'}</strong><span>{formatDateTime(entry.created_at)}</span></div>;
+                                    })}
+                                </div>
+                            ) : dataView === 'issues' ? (
                                 <div style={{ minWidth: '1000px', border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1.05fr 1.15fr 1.3fr 1fr 2.2fr 1.15fr', gap: '12px', padding: '12px 15px', background: '#F8FAFC', color: '#475569', fontSize: '12px', fontWeight: '800' }}>
                                         <span>Customer</span>
@@ -1080,7 +1106,7 @@ export default function ManagerDashboard({ profile, onLogout }) {
 
             {selectedCustomerId && (() => {
                 const customer = customerData.find((item) => item.id === selectedCustomerId);
-                return customer ? <CustomerDetailModal customer={customer} managerId={profile.id} activations={planActivations.filter((item) => item.profile_id === customer.id)} freebies={freeCreditGrants.filter((item) => item.profile_id === customer.id)} invoices={customerInvoices.filter((item) => item.profile_id === customer.id)} onClose={() => setSelectedCustomerId(null)} onRefresh={loadData} onActivatePlan={openPlanActivation} onAddFreebies={openAddCredits} /> : null;
+                return customer ? <CustomerDetailModal customer={customer} managerId={profile.id} activations={planActivations.filter((item) => item.profile_id === customer.id)} freebies={freeCreditGrants.filter((item) => item.profile_id === customer.id)} invoices={customerInvoices.filter((item) => item.profile_id === customer.id)} usage={clearanceUsage.filter((item) => item.profile_id === customer.id)} onClose={() => setSelectedCustomerId(null)} onRefresh={loadData} onActivatePlan={openPlanActivation} onAddFreebies={openAddCredits} /> : null;
             })()}
 
             {activationCustomer && (
