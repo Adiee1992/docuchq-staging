@@ -116,7 +116,7 @@ begin
         values (
             normalized_iec,
             new.id,
-            2
+            1
         )
         on conflict (iec_code) do nothing
         returning iec_code into registry_inserted;
@@ -154,7 +154,7 @@ begin
         coalesce(new.raw_user_meta_data->>'gstin', ''),
         coalesce(new.raw_user_meta_data->>'pan', ''),
         requested_role,
-        case when requested_role = 'exporter' then 2 else 0 end
+        case when requested_role = 'exporter' then 1 else 0 end
     );
 
     return new;
