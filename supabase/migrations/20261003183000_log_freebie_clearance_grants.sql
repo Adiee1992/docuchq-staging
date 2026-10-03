@@ -38,19 +38,16 @@ begin
         raise exception 'Free credits must be between 1 and 5.';
     end if;
 
-    select *
-    into target_profile
+    select * into target_profile
     from public.profiles
-    where id = customer_id_input
-      and role = 'exporter'
+    where id = customer_id_input and role = 'exporter'
     for update;
 
     if target_profile.id is null then
         raise exception 'Customer profile was not found.';
     end if;
 
-    select coalesce(sum(credits), 0)
-    into already_granted
+    select coalesce(sum(credits), 0) into already_granted
     from public.free_credit_grants
     where profile_id = customer_id_input
       and created_at >= month_start
@@ -93,36 +90,15 @@ begin
     );
 
     insert into public.credit_transactions (
-        profile_id,
-        transaction_type,
-        credits,
-        amount,
-        currency,
-        description,
-        status
-    )
-    values (
-        customer_id_input,
-        'adjustment',
-        credits_input,
-        0,
-        'INR',
-        'Freebie credits added by manager',
-        'completed'
+        profile_id, transaction_type, credits, amount, currency, description, status
+    ) values (
+        customer_id_input, 'adjustment', credits_input, 0, 'INR',
+        'Freebie credits added by manager', 'completed'
     );
 
-    insert into public.audit_logs (
-        actor_id,
-        entity_type,
-        entity_id,
-        action,
-        metadata
-    )
+    insert into public.audit_logs (actor_id, entity_type, entity_id, action, metadata)
     values (
-        auth.uid(),
-        'profile',
-        customer_id_input,
-        'freebie',
+        auth.uid(), 'profile', customer_id_input, 'freebie',
         jsonb_build_object(
             'credits', credits_input,
             'monthly_total', already_granted + credits_input,
@@ -140,6 +116,41 @@ begin
     );
 end;
 $function$;
+
+-- Historical grants did not preserve point-in-time balances, so those fields
+-- remain null instead of presenting reconstructed values as authoritative.
+insert into public.clearance_transactions (
+    profile_id, free_credit_grant_id, plan_activation_id, plan_type,
+    transaction_type, amount, balance_before, balance_after, reason,
+    actor_id, customer_name_snapshot, company_name_snapshot, email_snapshot, created_at
+)
+select
+    freebie.profile_id,
+    freebie.id,
+    matching_plan.id,
+    matching_plan.plan_type,
+    'manual_adjustment',
+    freebie.credits,
+    null,
+    null,
+    'Freebies credited (historical)',
+    freebie.granted_by,
+    nullif(btrim(concat_ws(' ', profile.first_name, profile.last_name)), ''),
+    profile.company_name,
+    profile.email,
+    freebie.created_at
+from public.free_credit_grants freebie
+join public.profiles profile on profile.id = freebie.profile_id
+left join lateral (
+    select activation.id, activation.plan_type
+    from public.customer_plan_activations activation
+    where activation.profile_id = freebie.profile_id
+      and activation.starts_at <= freebie.created_at
+      and (activation.expires_at is null or activation.expires_at >= freebie.created_at)
+    order by activation.starts_at desc
+    limit 1
+) matching_plan on true
+on conflict (free_credit_grant_id) where free_credit_grant_id is not null do nothing;
 
 revoke all on function public.grant_manager_free_credits(uuid, integer) from public;
 grant execute on function public.grant_manager_free_credits(uuid, integer) to authenticated;
