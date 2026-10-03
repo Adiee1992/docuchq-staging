@@ -866,7 +866,9 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
             ? { plan_type: 'trial', status: fallbackCredits > 0 ? 'active' : 'exhausted', track_limit: fallbackCredits, tracks_used: 0, legacyFallback: true }
             : planData;
         setCurrentPlan(resolvedPlan || null);
-        setAvailableClearances(Math.max(0, (resolvedPlan?.track_limit ?? fallbackCredits) - (resolvedPlan?.tracks_used ?? 0)));
+        const resolvedPlanExpired = Boolean(resolvedPlan?.expires_at && new Date(resolvedPlan.expires_at) <= new Date());
+        const resolvedPlanActive = resolvedPlan?.status === 'active' && !resolvedPlanExpired;
+        setAvailableClearances(resolvedPlanActive ? Math.max(0, (resolvedPlan?.track_limit ?? fallbackCredits) - (resolvedPlan?.tracks_used ?? 0)) : 0);
     };
 
     useEffect(() => {
@@ -972,7 +974,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
     const planName = currentPlan?.plan_type
         ? `${currentPlan.plan_type.charAt(0).toUpperCase()}${currentPlan.plan_type.slice(1)}`
         : 'No Plan';
-    const clearanceDisplay = availableClearances ?? 0;
+    const clearanceDisplay = planActive ? (availableClearances ?? 0) : 0;
     const planDaysRemaining = currentPlan?.expires_at
         ? Math.max(0, Math.ceil((new Date(currentPlan.expires_at).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
         : null;

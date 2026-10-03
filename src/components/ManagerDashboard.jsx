@@ -472,9 +472,13 @@ export default function ManagerDashboard({ profile, onLogout }) {
                 ...customerDocuments.flatMap((document) => [document.updated_at, document.reviewed_at, document.submitted_at])
             ].filter(Boolean).map((value) => new Date(value)).filter((value) => !Number.isNaN(value.getTime()));
 
+            const latestPlan = planActivations.find((activation) => activation.profile_id === customer.id) || null;
+            const latestPlanExpired = Boolean(latestPlan?.expires_at && new Date(latestPlan.expires_at) <= new Date());
+
             return {
                 ...customer,
-                currentPlan: planActivations.find((activation) => activation.profile_id === customer.id) || null,
+                available_clearances: latestPlanExpired ? 0 : customer.available_clearances,
+                currentPlan: latestPlanExpired ? { ...latestPlan, status: 'expired' } : latestPlan,
                 trackCount: customerTracks.length,
                 documentCount: customerDocuments.length,
                 pendingTracks: customerTracks.filter((track) => track.status === 'pending_review').length,
