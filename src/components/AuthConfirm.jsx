@@ -22,15 +22,25 @@ export default function AuthConfirm() {
         const code = searchParams.get('code');
         const type = searchParams.get('type') || 'signup';
 
+        const finishAccountSetup = async (user) => {
+            try {
+                const profile = await ensureProfile(user);
+                await recordLegalAcceptance(user, user?.app_metadata?.provider === 'google' ? 'google' : 'password');
+                setStatusMessage('Email verified successfully! Opening workspace...');
+                setTimeout(() => navigate(getDashboardPath(profile?.role)), 1500);
+            } catch (setupError) {
+                console.error('Post-verification setup error:', getErrorMessage(setupError));
+                setStatusMessage('Your email is verified. Please sign in to continue.');
+                setTimeout(() => navigate('/'), 2500);
+            }
+        };
+
         const completeVerification = async () => {
             if (code) {
                 const { data, error } = await supabase.auth.exchangeCodeForSession(code);
                 if (error) throw error;
 
-                const profile = await ensureProfile(data.session?.user);
-                await recordLegalAcceptance(data.session?.user, data.session?.user?.app_metadata?.provider === 'google' ? 'google' : 'password');
-                setStatusMessage('Email verified successfully! Opening workspace...');
-                setTimeout(() => navigate(getDashboardPath(profile?.role)), 1500);
+                await finishAccountSetup(data.session?.user);
                 return;
             }
 
@@ -38,20 +48,14 @@ export default function AuthConfirm() {
                 const { data, error } = await supabase.auth.verifyOtp({ token_hash, type });
                 if (error) throw error;
 
-                const profile = await ensureProfile(data.user);
-                await recordLegalAcceptance(data.user, data.user?.app_metadata?.provider === 'google' ? 'google' : 'password');
-                setStatusMessage('Email verified successfully! Opening workspace...');
-                setTimeout(() => navigate(getDashboardPath(profile?.role)), 1500);
+                await finishAccountSetup(data.user);
                 return;
             }
 
             const { data: { session: existingSession } } = await supabase.auth.getSession();
 
             if (existingSession) {
-                const profile = await ensureProfile(existingSession.user);
-                await recordLegalAcceptance(existingSession.user, existingSession.user?.app_metadata?.provider === 'google' ? 'google' : 'password');
-                setStatusMessage('Welcome back! Opening workspace...');
-                setTimeout(() => navigate(getDashboardPath(profile?.role)), 1000);
+                await finishAccountSetup(existingSession.user);
                 return;
             }
 
