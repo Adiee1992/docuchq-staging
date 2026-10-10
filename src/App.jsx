@@ -1,8 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
-import Hero from './components/Hero';
-import Features from './components/Features';
+import HomeLanding from './components/HomeLanding';
 import HowItWorks from './components/HowItWorks';
 import SignUp from './components/SignUp';
 import Footer from './components/Footer';
@@ -135,8 +134,7 @@ function AppContent() {
                         element={
                             <div className="home-page-shell">
                                 <Header onSignInClick={() => setIsModalOpen(true)} />
-                                <Hero onTalkToSales={() => setSalesModalOpen(true)} />
-                                <Features />
+                                <HomeLanding onTalkToSales={() => setSalesModalOpen(true)} />
                             </div>
                         }
                     />
