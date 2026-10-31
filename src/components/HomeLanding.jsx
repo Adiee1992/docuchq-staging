@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import portHero from '../assets/docuchq-port-hero.png';
+import logoIcon from '../assets/Logo_Header-Trans.png';
 
 const Icon = ({ type }) => {
     const paths = {
@@ -24,33 +25,49 @@ const StatusDot = ({ tone, children }) => (
 );
 
 function DashboardPreview() {
+    const counters = [
+        { tone: 'blue', value: 2, label: 'Pending Review', icon: '◷' },
+        { tone: 'amber', value: 1, label: 'Needs Info', icon: 'i' },
+        { tone: 'red', value: 1, label: 'Clearance Issue', icon: '!' },
+        { tone: 'green', value: 5, label: 'Compliant', icon: '✓' },
+        { tone: 'navy', value: 9, label: 'Total Tracks', icon: '▤' }
+    ];
+
     return (
-        <div className="home-product-preview" aria-label="DocuCHQ shipment review dashboard preview">
-            <aside className="preview-sidebar">
-                <span className="preview-mark">D</span>
-                <span className="preview-nav-dot active" />
-                <span className="preview-nav-dot" />
-                <span className="preview-nav-dot" />
-                <span className="preview-nav-dot" />
-            </aside>
-            <div className="preview-main">
-                <div className="preview-topbar">
+        <div className="home-product-preview" aria-label="DocuCHQ compliance documents dashboard preview">
+            <div className="preview-topbar">
+                <div className="preview-brand">
+                    <img src={logoIcon} alt="" aria-hidden="true" />
                     <strong><span>Docu</span>CHQ</strong>
-                    <div className="preview-search">Search shipments, documents...</div>
-                    <span className="preview-avatar">S</span>
                 </div>
-                <div className="preview-content">
-                    <div className="preview-title-row"><div><small>EXPORT WORKSPACE</small><h3>Shipments</h3></div><button type="button">+ New clearance</button></div>
-                    <div className="preview-summary">
-                        <span><b>12</b> All shipments</span><span><b>4</b> Under review</span><span><b>2</b> Needs attention</span><span><b>6</b> Compliant</span>
-                    </div>
-                    <div className="preview-table">
-                        <div className="preview-table-row preview-table-head"><span>Reference</span><span>Buyer</span><span>Destination</span><span>Status</span></div>
-                        <div className="preview-table-row"><b>DCQ-001</b><span>ABC Exports</span><span>USA</span><StatusDot tone="blue">Under Review</StatusDot></div>
-                        <div className="preview-table-row"><b>DCQ-002</b><span>XYZ Trades</span><span>UAE</span><StatusDot tone="red">Discrepancy</StatusDot></div>
-                        <div className="preview-table-row"><b>DCQ-003</b><span>Global Metals</span><span>Germany</span><StatusDot tone="green">Compliant</StatusDot></div>
-                        <div className="preview-table-row"><b>DCQ-004</b><span>Sunrise Textiles</span><span>UK</span><StatusDot tone="amber">Needs Info</StatusDot></div>
-                    </div>
+                <div className="preview-account-bar">
+                    <span>12 Days Left</span><span>◷ &nbsp;Trial Account</span><span>₹ &nbsp;Clearances: 1</span><b>M</b>
+                </div>
+            </div>
+            <div className="preview-content">
+                <div className="preview-title-row">
+                    <div><h3>Compliance Documents</h3><p>Manage clearance tracks, uploaded files, comments, and bank/payment context.</p></div>
+                    <button type="button">+ &nbsp; Create Clearance</button>
+                </div>
+                <div className="preview-summary">
+                    {counters.map((counter) => (
+                        <div className={`preview-counter preview-counter-${counter.tone}`} key={counter.label}>
+                            <i>{counter.icon}</i><span><b>{counter.value}</b>{counter.label}</span>
+                        </div>
+                    ))}
+                </div>
+                <div className="preview-date-filters">
+                    <b>All Dates</b><span>Today</span><span>This Week</span><span>This Month</span><span>This Year</span>
+                </div>
+                <div className="preview-filter-row">
+                    <div><b>All</b><span>Pending Review</span><span>Needs Info</span><span>Compliant</span><span>Clearance Issue</span></div>
+                    <div className="preview-search">Search reference, bank, file...</div>
+                </div>
+                <div className="preview-table">
+                    <div className="preview-table-row preview-table-head"><span>Reference Track</span><span>Customer</span><span>Country</span><span>Risk</span><span>Status</span></div>
+                    <div className="preview-table-row"><b>DCQ-1045</b><span>ABC Exports</span><span>UAE</span><StatusDot tone="green">Normal</StatusDot><StatusDot tone="blue">Pending Review</StatusDot></div>
+                    <div className="preview-table-row"><b>DCQ-1044</b><span>Sunrise Textiles</span><span>Germany</span><StatusDot tone="green">Normal</StatusDot><StatusDot tone="green">Compliant</StatusDot></div>
+                    <div className="preview-table-row"><b>DCQ-1043</b><span>Global Metals</span><span>UK</span><StatusDot tone="amber">Review Needed</StatusDot><StatusDot tone="amber">Needs Info</StatusDot></div>
                 </div>
             </div>
         </div>
