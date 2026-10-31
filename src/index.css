@@ -444,6 +444,8 @@ nav ul {
     color: #10233d;
     background: #fff;
     padding-top: 75px;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "clig" 0;
 }
 
 .home-page-shell > header {
