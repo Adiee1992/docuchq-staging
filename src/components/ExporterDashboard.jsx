@@ -1631,7 +1631,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
 
                         <input
                             type="text"
-                            placeholder="Search track, customer, file..."
+                            placeholder="Search track, buyer, file..."
                             value={searchTerm}
                             onChange={(event) => setSearchTerm(event.target.value)}
                             style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '14px', width: '260px', height: '36px', boxSizing: 'border-box', outline: 'none', color: '#0F172A' }}
@@ -1649,7 +1649,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                         <div ref={tableScrollRef} className="hide-horizontal-scrollbar" onScroll={syncMainTableScroll} style={{ overflowX: 'auto', overflowY: 'hidden' }}>
                         <div style={{ minWidth: `${trackTableMinWidth}px` }}>
                             <div style={{ display: 'grid', gridTemplateColumns: trackTableColumns, padding: '14px 20px', backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0', gap: '12px' }}>
-                                {['', 'Track ID', 'Customer', 'Country', 'Trade Review', 'Currency', 'Payment Method', 'Submitted', 'Status', 'Action'].map((heading, index) => (
+                                {['', 'Track ID', 'Buyer Name', 'Country', 'Trade Review', 'Currency', 'Payment Method', 'Submitted', 'Status', 'Action'].map((heading, index) => (
                                     <span
                                         key={heading}
                                         style={{
@@ -2045,8 +2045,8 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                         <div style={clearanceFieldsStackStyle}>
                             <div style={clearanceFieldRowStyle}>
                                 <div style={clearanceFieldColumnStyle}>
-                                    <label style={clearanceLabelStyle}>Customer Name *</label>
-                                    <input required value={clearanceForm.customerName} onChange={(event) => setClearanceForm((current) => ({ ...current, customerName: event.target.value }))} placeholder="e.g., TechCorp" style={fieldStyle} />
+                                    <label style={clearanceLabelStyle}>Buyer Name *</label>
+                                    <input required value={clearanceForm.customerName} onChange={(event) => setClearanceForm((current) => ({ ...current, customerName: event.target.value }))} placeholder="e.g., TechCorp" style={{ ...fieldStyle, margin: 0 }} />
                                 </div>
                                 <div style={clearanceFieldColumnStyle}>
                                     <label style={clearanceLabelStyle}>Destination Country *</label>
