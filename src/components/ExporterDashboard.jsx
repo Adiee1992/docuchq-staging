@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../context/ToastContext';
-import { getCountryRiskProfile, getTradeReviewProfile, RiskBadge, riskProfileCountries, TradeReviewBadge } from '../utils/riskProfiles';
+import { getTradeReviewProfile, riskProfileCountries, TradeReviewBadge } from '../utils/riskProfiles';
 import { getErrorMessage } from '../utils/errors';
 import { pricingPlans } from '../data/pricingPlans';
 import { documentTypes } from '../data/documentTypes';
@@ -78,32 +78,6 @@ const currencies = [
 ];
 
 const paymentMethods = ['LC', 'Non-LC', 'Both'];
-const adBanks = [
-    'State Bank of India',
-    'HDFC Bank',
-    'ICICI Bank',
-    'Axis Bank',
-    'Kotak Mahindra Bank',
-    'Bank of Baroda',
-    'Punjab National Bank',
-    'Canara Bank',
-    'Union Bank of India',
-    'Bank of India',
-    'IDFC FIRST Bank',
-    'IndusInd Bank',
-    'Yes Bank',
-    'Federal Bank',
-    'IDBI Bank',
-    'Indian Bank',
-    'Central Bank of India',
-    'UCO Bank',
-    'HSBC India',
-    'Standard Chartered Bank',
-    'Citibank India',
-    'Deutsche Bank India',
-    'DBS Bank India',
-    'Other'
-];
 const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
 const filterTabs = ['All', 'Pending Review', 'Needs Info', 'Compliant', 'Clearance Issue'];
 const dateFilterTabs = ['All Dates', 'Today', 'This Week', 'This Month', 'This Year'];
@@ -257,10 +231,6 @@ function getTrackStatus(documents) {
     return documents[0]?.status || 'pending_review';
 }
 
-function makeReferenceNumber() {
-    return `CLR-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
-}
-
 const fieldStyle = {
     width: '100%',
     height: '44px',
@@ -356,9 +326,9 @@ const uploadFullSpan = {
     ...uploadFieldStyle
 };
 
-const trackTableColumns = '44px minmax(150px, 1.3fr) minmax(120px, 1fr) minmax(110px, 0.9fr) minmax(145px, 0.95fr) minmax(190px, 1.1fr) minmax(95px, 0.8fr) minmax(120px, 0.9fr) 120px 140px 250px';
-const trackTableMinWidth = 1570;
-const trackScrollableWidth = 1180;
+const trackTableColumns = '44px minmax(150px, 1.3fr) minmax(120px, 1fr) minmax(110px, 0.9fr) minmax(190px, 1.1fr) minmax(95px, 0.8fr) minmax(120px, 0.9fr) 120px 140px 250px';
+const trackTableMinWidth = 1425;
+const trackScrollableWidth = 1023;
 const stickyActionStyle = {
     position: 'sticky',
     right: 0,
@@ -390,6 +360,16 @@ const stickyHeaderStatusStyle = {
     zIndex: 5,
     background: '#F8FAFC',
     boxShadow: '-12px 0 0 #F8FAFC, 12px 0 0 #F8FAFC'
+};
+const stickyDocumentActionStyle = {
+    ...stickyActionStyle,
+    background: '#FBFEFD',
+    boxShadow: '-12px 0 0 #FBFEFD'
+};
+const stickyDocumentStatusStyle = {
+    ...stickyStatusStyle,
+    background: '#FBFEFD',
+    boxShadow: '-12px 0 0 #FBFEFD, 12px 0 0 #FBFEFD'
 };
 
 const softBlueButtonStyle = {
@@ -805,8 +785,6 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
         file: null
     });
     const [clearanceForm, setClearanceForm] = useState({
-        referenceId: '',
-        adBankName: '',
         paymentMethod: 'LC',
         customerName: '',
         destinationCountry: '',
@@ -942,16 +920,13 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
         const query = searchTerm.trim().toLowerCase();
 
         return dateFilteredTracks.filter((track) => {
-            const riskLabel = getCountryRiskProfile(track.destinationCountry).label.toLowerCase();
             const tradeReviewLabel = getTradeReviewProfile(track.destinationCountry).label.toLowerCase();
             const matchesStatus = !statusFilter || track.status === statusFilter;
             const matchesSearch = !query
                 || track.referenceId.toLowerCase().includes(query)
                 || track.paymentMethod.toLowerCase().includes(query)
-                || track.adBankName.toLowerCase().includes(query)
                 || track.customerName.toLowerCase().includes(query)
                 || track.destinationCountry.toLowerCase().includes(query)
-                || riskLabel.includes(query)
                 || tradeReviewLabel.includes(query)
                 || track.invoiceCurrency.toLowerCase().includes(query)
                 || track.documents.some((document) => (
@@ -1007,8 +982,6 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
         }
 
         setClearanceForm({
-            referenceId: '',
-            adBankName: '',
             paymentMethod: 'LC',
             customerName: '',
             destinationCountry: '',
@@ -1030,13 +1003,10 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
             return;
         }
 
-        const referenceId = clearanceForm.referenceId.trim();
         if (
             !clearanceForm.customerName.trim()
-            || !referenceId
             || !clearanceForm.destinationCountry.trim()
             || !clearanceForm.invoiceCurrency
-            || !clearanceForm.adBankName.trim()
             || !clearanceForm.paymentMethod
         ) {
             showToast('Please complete all clearance fields.', 'error');
@@ -1050,22 +1020,23 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
         }
 
         setCreatingClearance(true);
-        const { error } = await supabase
+        const { data: createdTrack, error } = await supabase
             .from('clearance_tracks')
             .insert({
                 profile_id: userId,
-                reference_id: referenceId,
                 customer_name: clearanceForm.customerName.trim(),
                 destination_country: clearanceForm.destinationCountry.trim(),
                 invoice_currency: clearanceForm.invoiceCurrency,
-                ad_bank_name: clearanceForm.adBankName.trim(),
                 payment_method: clearanceForm.paymentMethod
-            });
+            })
+            .select('reference_id')
+            .single();
         if (error) {
             setCreatingClearance(false);
             showToast(error.message, 'error');
             return;
         }
+        const referenceId = createdTrack.reference_id;
 
         let uploadedCount = 0;
         for (const file of clearanceFiles) {
@@ -1093,7 +1064,6 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                 file_size: file.size,
                 mime_type: file.type || 'application/octet-stream',
                 payment_method: clearanceForm.paymentMethod,
-                ad_bank_name: clearanceForm.adBankName.trim(),
                 customer_name: clearanceForm.customerName.trim(),
                 destination_country: clearanceForm.destinationCountry.trim(),
                 invoice_currency: clearanceForm.invoiceCurrency,
@@ -1129,11 +1099,16 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
             return;
         }
 
+        const referenceId = uploadForm.referenceId.trim();
+        if (!referenceId) {
+            showToast('Select a clearance track before uploading a file.', 'error');
+            return;
+        }
+
         setUploading(true);
 
         const documentId = crypto.randomUUID();
         const safeFileName = makeSafeFileName(uploadForm.file.name);
-        const referenceId = uploadForm.referenceId.trim() || makeReferenceNumber();
         const storagePath = `${userId}/${documentId}/${safeFileName}`;
 
         await supabase
@@ -1636,7 +1611,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
 
                         <input
                             type="text"
-                            placeholder="Search reference, bank, file..."
+                            placeholder="Search track, customer, file..."
                             value={searchTerm}
                             onChange={(event) => setSearchTerm(event.target.value)}
                             style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '14px', width: '260px', height: '36px', boxSizing: 'border-box', outline: 'none', color: '#0F172A' }}
@@ -1654,7 +1629,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                         <div ref={tableScrollRef} className="hide-horizontal-scrollbar" onScroll={syncMainTableScroll} style={{ overflowX: 'auto', overflowY: 'hidden' }}>
                         <div style={{ minWidth: `${trackTableMinWidth}px` }}>
                             <div style={{ display: 'grid', gridTemplateColumns: trackTableColumns, padding: '14px 20px', backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0', gap: '12px' }}>
-                                {['', 'Reference Track', 'Customer', 'Country', 'Risk', 'Trade Review', 'Currency', 'Payment Method', 'Submitted', 'Status', 'Action'].map((heading, index) => (
+                                {['', 'Track ID', 'Customer', 'Country', 'Trade Review', 'Currency', 'Payment Method', 'Submitted', 'Status', 'Action'].map((heading, index) => (
                                     <span
                                         key={heading}
                                         style={{
@@ -1664,8 +1639,8 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                             display: 'flex',
                                             alignItems: 'center',
                                             whiteSpace: heading === 'Payment Method' ? 'normal' : 'nowrap',
-                                            ...(index === 9 ? stickyHeaderStatusStyle : {}),
-                                            ...(index === 10 ? stickyHeaderActionStyle : {})
+                                            ...(index === 8 ? stickyHeaderStatusStyle : {}),
+                                            ...(index === 9 ? stickyHeaderActionStyle : {})
                                         }}
                                     >
                                         {heading}
@@ -1697,7 +1672,6 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                             </div>
                                             <span style={{ color: '#475569', fontSize: '13px' }}>{track.customerName}</span>
                                             <span style={{ color: '#475569', fontSize: '13px' }}>{track.destinationCountry}</span>
-                                            <RiskBadge country={track.destinationCountry} />
                                             <TradeReviewBadge country={track.destinationCountry} />
                                             <span style={{ color: '#475569', fontSize: '13px', fontWeight: '700' }}>{track.invoiceCurrency}</span>
                                             <span style={{ color: '#475569', fontSize: '13px', fontWeight: '700' }}>{track.paymentMethod}</span>
@@ -1723,23 +1697,26 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                         </div>
 
                                         {!collapsed && (
-                                            <div style={{ background: '#FBFEFD', borderTop: '1px solid #E2E8F0', padding: '8px 20px 14px 64px' }}>
+                                            <div style={{ background: '#FBFEFD', borderTop: '1px solid #E2E8F0', padding: '8px 0 14px' }}>
                                                 {track.documents.length === 0 ? (
-                                                    <div style={{ padding: '14px 0', color: '#94A3B8', fontSize: '13px', fontWeight: '700' }}>No files added yet.</div>
+                                                    <div style={{ padding: '14px 20px 14px 76px', color: '#94A3B8', fontSize: '13px', fontWeight: '700' }}>No files added yet.</div>
                                                 ) : track.documents.map((document) => {
                                                     const documentMeta = statusMeta[document.status] || statusMeta.pending_review;
                                                     const canDelete = !lockedDeleteStatuses.includes(document.status);
                                                     const formattedVersion = formattedVersions.find((version) => version.document_id === document.id);
                                                     return (
-                                                        <div key={document.id} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1.1fr 1.1fr 1fr 1.2fr', alignItems: 'center', gap: '12px', padding: '10px 0', borderTop: '1px solid #E2E8F0' }}>
-                                                            <div>
+                                                        <div key={document.id} style={{ display: 'grid', gridTemplateColumns: trackTableColumns, alignItems: 'center', gap: '12px', padding: '10px 20px', borderTop: '1px solid #E2E8F0' }}>
+                                                            <span aria-hidden="true" />
+                                                            <div style={{ gridColumn: '2 / span 3' }}>
                                                                 <p style={{ margin: 0, color: '#0F172A', fontSize: '13px', fontWeight: '800', overflowWrap: 'anywhere' }}>{document.file_name}</p>
                                                                 <p style={{ margin: '4px 0 0 0', color: '#94A3B8', fontSize: '12px' }}>{formatBytes(document.file_size)}</p>
                                                             </div>
-                                                            <span style={{ color: '#475569', fontSize: '13px' }}>{document.document_type || '-'}</span>
-                                                            <span style={{ color: '#475569', fontSize: '13px' }}>{formatDate(document.submitted_at)}</span>
-                                                            <span style={{ width: 'fit-content', borderRadius: '999px', padding: '5px 10px', fontSize: '12px', fontWeight: '800', color: documentMeta.color, background: documentMeta.background }}>{documentMeta.label}</span>
-                                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                            <span style={{ gridColumn: '5 / span 3', color: '#475569', fontSize: '13px' }}>{document.document_type || '-'}</span>
+                                                            <span style={{ gridColumn: '8', color: '#475569', fontSize: '13px' }}>{formatDate(document.submitted_at)}</span>
+                                                            <div style={{ ...stickyDocumentStatusStyle, gridColumn: '9' }}>
+                                                                <span style={{ width: 'fit-content', borderRadius: '999px', padding: '5px 10px', fontSize: '12px', fontWeight: '800', color: documentMeta.color, background: documentMeta.background, whiteSpace: 'nowrap' }}>{documentMeta.label}</span>
+                                                            </div>
+                                                            <div style={{ ...stickyDocumentActionStyle, gridColumn: '10', gap: '8px' }}>
                                                                 <button onClick={() => loadPreview(document)} style={{ ...softBlueButtonStyle, padding: '7px 10px' }}>Preview</button>
                                                                 {formattedVersion && <button type="button" onClick={() => downloadFormattedVersion(formattedVersion)} aria-label={`Download formatted version of ${document.file_name}`} title="Download formatted document" style={{ ...softBlueButtonStyle, width: '32px', height: '32px', padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg></button>}
                                                                 <button onClick={() => handleDeleteDocument(document)} disabled={!canDelete} style={{ border: '1px solid #FECACA', background: canDelete ? '#FEF2F2' : '#F8FAFC', color: canDelete ? '#B91C1C' : '#94A3B8', borderRadius: '6px', padding: '7px 10px', cursor: canDelete ? 'pointer' : 'not-allowed', fontWeight: '800', fontSize: '12px' }}>Delete</button>
@@ -2051,13 +2028,6 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                     <input required value={clearanceForm.customerName} onChange={(event) => setClearanceForm((current) => ({ ...current, customerName: event.target.value }))} placeholder="e.g., TechCorp" style={fieldStyle} />
                                 </div>
                                 <div style={clearanceFieldColumnStyle}>
-                                    <label style={clearanceLabelStyle}>Reference Number *</label>
-                                    <input required value={clearanceForm.referenceId} onChange={(event) => setClearanceForm((current) => ({ ...current, referenceId: event.target.value }))} placeholder="e.g., INV-2023-001" style={fieldStyle} />
-                                </div>
-                            </div>
-
-                            <div style={clearanceFieldRowStyle}>
-                                <div style={clearanceFieldColumnStyle}>
                                     <label style={clearanceLabelStyle}>Destination Country *</label>
                                     <select required value={clearanceForm.destinationCountry} onChange={(event) => setClearanceForm((current) => ({ ...current, destinationCountry: event.target.value }))} style={selectFieldStyle}>
                                         <option value="">Select country...</option>
@@ -2066,23 +2036,14 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                         ))}
                                     </select>
                                 </div>
+                            </div>
+
+                            <div style={clearanceFieldRowStyle}>
                                 <div style={clearanceFieldColumnStyle}>
                                     <label style={clearanceLabelStyle}>Currency *</label>
                                     <select required value={clearanceForm.invoiceCurrency} onChange={(event) => setClearanceForm((current) => ({ ...current, invoiceCurrency: event.target.value }))} style={selectFieldStyle}>
                                         {currencies.map((currency) => (
                                             <option key={currency} value={currency}>{currency}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div style={clearanceFieldRowStyle}>
-                                <div style={clearanceFieldColumnStyle}>
-                                    <label style={clearanceLabelStyle}>AD Bank Name *</label>
-                                    <select required value={clearanceForm.adBankName} onChange={(event) => setClearanceForm((current) => ({ ...current, adBankName: event.target.value }))} style={selectFieldStyle}>
-                                        <option value="">Select AD bank...</option>
-                                        {adBanks.map((bank) => (
-                                            <option key={bank} value={bank}>{bank}</option>
                                         ))}
                                     </select>
                                 </div>

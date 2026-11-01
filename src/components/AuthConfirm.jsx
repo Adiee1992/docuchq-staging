@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { ensureProfile } from '../utils/profile';
@@ -16,22 +16,29 @@ export default function AuthConfirm() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const [statusMessage, setStatusMessage] = useState('Verifying your credentials...');
+    const verificationStarted = useRef(false);
 
     useEffect(() => {
+        if (verificationStarted.current) return undefined;
+        verificationStarted.current = true;
+
         const token_hash = searchParams.get('token_hash');
         const code = searchParams.get('code');
         const type = searchParams.get('type') || 'signup';
+        const redirectAfter = (path, delay) => {
+            window.setTimeout(() => navigate(path), delay);
+        };
 
         const finishAccountSetup = async (user) => {
             try {
                 const profile = await ensureProfile(user);
                 await recordLegalAcceptance(user, user?.app_metadata?.provider === 'google' ? 'google' : 'password');
                 setStatusMessage('Email verified successfully! Opening workspace...');
-                setTimeout(() => navigate(getDashboardPath(profile?.role)), 1500);
+                redirectAfter(getDashboardPath(profile?.role), 1500);
             } catch (setupError) {
                 console.error('Post-verification setup error:', getErrorMessage(setupError));
                 setStatusMessage('Your email is verified. Please sign in to continue.');
-                setTimeout(() => navigate('/'), 2500);
+                redirectAfter('/', 2500);
             }
         };
 
@@ -60,13 +67,20 @@ export default function AuthConfirm() {
             }
 
             setStatusMessage('No verification parameters detected.');
-            setTimeout(() => navigate('/'), 2000);
+            redirectAfter('/', 2000);
         };
 
-        completeVerification().catch((error) => {
+        completeVerification().catch(async (error) => {
             console.error('Verification error:', getErrorMessage(error));
+
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                await finishAccountSetup(session.user);
+                return;
+            }
+
             setStatusMessage('Verification could not be completed. Please sign in again.');
-            setTimeout(() => navigate('/'), 2500);
+            redirectAfter('/', 2500);
         });
     }, [searchParams, navigate]);
 

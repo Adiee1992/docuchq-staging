@@ -3,7 +3,7 @@ import logoIcon from '../assets/Logo_Header-Trans.png';
 import logoFallback from '../assets/Logo_Header.JPG';
 
 
-export default function Header({ onSignInClick }) {
+export default function Header({ onSignInClick, onHowItWorksClick }) {
     return (
         <header>
             <div className="logo">
@@ -15,7 +15,13 @@ export default function Header({ onSignInClick }) {
 
             <nav>
                 <ul>
-                    <li><Link to="/how-it-works">How it works</Link></li>
+                    <li>
+                        {onHowItWorksClick ? (
+                            <button type="button" className="header-nav-button" onClick={onHowItWorksClick}>How it works</button>
+                        ) : (
+                            <Link to="/how-it-works">How it works</Link>
+                        )}
+                    </li>
                     <li className="btn1">
                         <a
                             href="#signin"
