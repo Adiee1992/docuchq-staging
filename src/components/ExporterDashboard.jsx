@@ -16,7 +16,7 @@ const statusMeta = {
     pending_review: { label: 'Pending Review', color: '#49A8D8', background: 'rgba(29, 78, 216, 0.1)' },
     needs_info: { label: 'Needs Info', color: '#A16207', background: 'rgba(161, 98, 7, 0.1)' },
     approved: { label: 'Compliant', color: '#15803D', background: 'rgba(21, 128, 61, 0.1)' },
-    clearance_issue: { label: 'Clearance Issue', color: '#B91C1C', background: 'rgba(185, 28, 28, 0.1)' },
+    clearance_issue: { label: 'Need Help', color: '#B91C1C', background: 'rgba(185, 28, 28, 0.1)' },
     rejected: { label: 'Rejected', color: '#64748B', background: '#F1F5F9' },
     cancelled: { label: 'Cancelled', color: '#64748B', background: '#F1F5F9' }
 };
@@ -79,7 +79,7 @@ const currencies = [
 
 const paymentMethods = ['LC', 'Non-LC', 'Both'];
 const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
-const filterTabs = ['All', 'Pending Review', 'Needs Info', 'Compliant', 'Clearance Issue'];
+const filterTabs = ['All', 'Pending Review', 'Needs Info', 'Compliant', 'Need Help'];
 const dateFilterTabs = ['All Dates', 'Today', 'This Week', 'This Month', 'This Year'];
 const lockedDeleteStatuses = ['needs_info', 'approved', 'clearance_issue'];
 
@@ -142,6 +142,7 @@ function formatBytes(bytes) {
 
 function statusFromTab(tab) {
     if (tab === 'Compliant') return 'approved';
+    if (tab === 'Need Help') return 'clearance_issue';
     return tab.toLowerCase().replace(/\s+/g, '_');
 }
 
@@ -1308,11 +1309,11 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
         const approvedDocuments = track.documents.filter((document) => document.status === 'approved');
 
         if (approvedDocuments.length !== track.documents.length) {
-            showToast('Payment stuck can be marked only after every document in this track is compliant.', 'error');
+            showToast('Help can be requested only after every document in this track is compliant.', 'error');
             return;
         }
 
-        const confirmed = window.confirm('Mark this clearance track as a clearance issue because payment is stuck?');
+        const confirmed = window.confirm('Do you need assistance resolving a bank query?');
         if (!confirmed) return;
 
         setStatusSubmitting(true);
@@ -1344,7 +1345,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
         );
 
         setStatusSubmitting(false);
-        showToast('Clearance issue marked for this track.', 'success');
+        showToast('Your request for assistance has been submitted.', 'success');
         loadDocuments();
     };
 
@@ -1470,7 +1471,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
     const metricCards = [
         { label: 'Pending Review', value: metrics.pending_review, color: '#49A8D8', icon: 'pending' },
         { label: 'Needs Info', value: metrics.needs_info, color: '#A16207', icon: 'info' },
-        { label: 'Clearance Issue', value: metrics.clearance_issue, color: '#B91C1C', icon: 'issue' },
+        { label: 'Need Help', value: metrics.clearance_issue, color: '#B91C1C', icon: 'issue' },
         { label: 'Compliant', value: metrics.approved, color: '#15803D', icon: 'approved' },
         { label: 'Total Tracks', value: metrics.total, color: '#0F172A', icon: 'total' }
     ];
