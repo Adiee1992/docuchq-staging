@@ -5,6 +5,7 @@ import { getTradeReviewProfile, riskProfileCountries, TradeReviewBadge } from '.
 import { getErrorMessage } from '../utils/errors';
 import { pricingPlans } from '../data/pricingPlans';
 import { documentTypes } from '../data/documentTypes';
+import { companyDetails } from '../data/companyDetails';
 import { createDocumentSignedUrl } from '../utils/documentPreview';
 import DocumentPreviewViewer from './DocumentPreviewViewer';
 import DashboardHowItWorksModal from './DashboardHowItWorksModal';
@@ -1889,14 +1890,20 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                         <div style={{ display: 'grid', gap: '12px' }}>
                             <div style={{ padding: '15px 16px', border: '1px solid #E2E8F0', borderRadius: '8px', background: '#F8FAFC' }}>
                                 <p style={{ margin: '0 0 5px', color: '#64748B', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Customer Support Number</p>
-                                <a href="tel:+919000000000" style={{ color: '#0F172A', fontSize: '15px', fontWeight: '800', textDecoration: 'none' }}>+91 90000 00000</a>
+                                <a href={`tel:${companyDetails.supportPhoneHref}`} style={{ color: '#0F172A', fontSize: '15px', fontWeight: '800', textDecoration: 'none' }}>{companyDetails.supportPhoneDisplay}</a>
+                                <span style={{ color: '#64748B', fontSize: '12px', fontWeight: '700' }}> · </span>
+                                <a href={companyDetails.whatsappHref} target="_blank" rel="noreferrer" style={{ color: '#2789B8', fontSize: '12px', fontWeight: '800', textDecoration: 'none' }}>WhatsApp</a>
                             </div>
                             <div style={{ padding: '15px 16px', border: '1px solid #E2E8F0', borderRadius: '8px', background: '#F8FAFC' }}>
                                 <p style={{ margin: '0 0 5px', color: '#64748B', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Support Email</p>
-                                <a href="mailto:support@docuchq.example" style={{ color: '#2789B8', fontSize: '15px', fontWeight: '800', textDecoration: 'none', overflowWrap: 'anywhere' }}>support@docuchq.example</a>
+                                <a href={`mailto:${companyDetails.supportEmail}`} style={{ color: '#2789B8', fontSize: '15px', fontWeight: '800', textDecoration: 'none', overflowWrap: 'anywhere' }}>{companyDetails.supportEmail}</a>
+                            </div>
+                            <div style={{ padding: '15px 16px', border: '1px solid #E2E8F0', borderRadius: '8px', background: '#F8FAFC' }}>
+                                <p style={{ margin: '0 0 5px', color: '#64748B', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Privacy and Grievances</p>
+                                <p style={{ margin: 0, color: '#0F172A', fontSize: '13px', fontWeight: '700' }}>{companyDetails.grievanceOfficer} · acknowledgement within {companyDetails.acknowledgementPeriod} · target resolution within {companyDetails.resolutionTarget}</p>
                             </div>
                         </div>
-                        <p style={{ margin: '14px 0 0', color: '#A16207', fontSize: '11px', fontWeight: '700' }}>Placeholder contact details for layout preview only.</p>
+                        <p style={{ margin: '14px 0 0', color: '#64748B', fontSize: '11px', fontWeight: '700' }}>{companyDetails.operatingHours}</p>
                     </div>
                 </div>
             )}
@@ -2238,7 +2245,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                         </div>
 
                         <div style={{ marginTop: '20px', padding: '16px 18px', border: '1px solid rgba(73, 168, 216, 0.3)', borderRadius: '8px', background: 'rgba(73, 168, 216, 0.08)', color: '#334155', fontSize: '13px', lineHeight: 1.6 }}>
-                            After payment, send the payment screenshot and your registered company name to <strong>payments@docuchq.example</strong> or WhatsApp <strong>+91 90000 00000</strong>. Your plan will be activated after payment verification.
+                            After payment, send the payment screenshot and your registered company name to <strong>{companyDetails.supportEmail}</strong> or WhatsApp <strong>{companyDetails.supportPhoneDisplay}</strong>. Your plan will be activated after payment verification.
                         </div>
                     </div>
                 </div>

@@ -89,10 +89,10 @@ begin
     values (
         auth.uid(),
         coalesce(auth.jwt() ->> 'email', ''),
-        '2026-06-18',
-        '2026-06-18',
-        '61ba5014b70cf8ac1609e854a76062432c2ef5802127ccf8f2668e3ebe125e78',
-        '6a2ead40ba80dd48fbac94aef9515bbf6a445722fca8bf1e382e1429ea72cdc6',
+        '2026-11-01',
+        '2026-11-01',
+        'f80f611c5a92b1c87756468b576726cfb0a1655030b03b06fbb067dfe07ea449',
+        '9b5c0d175715f0280aee45f3c245c8d5ea7f5eea4e336f43ed3b346504f880c0',
         true,
         true,
         'I agree to the Terms of Use.',
@@ -112,8 +112,8 @@ begin
         into acceptance_id
         from public.user_legal_acceptances
         where user_id = auth.uid()
-          and terms_version = '2026-06-18'
-          and privacy_version = '2026-06-18';
+          and terms_version = '2026-11-01'
+          and privacy_version = '2026-11-01';
     end if;
 
     return acceptance_id;

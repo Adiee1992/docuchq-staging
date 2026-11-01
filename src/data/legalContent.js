@@ -1,3 +1,5 @@
+import { companyDetails } from './companyDetails';
+
 export const termsSections = [
     {
         title: '1. Acceptance and business eligibility',
@@ -101,14 +103,15 @@ export const termsSections = [
         title: '15. Governing law and disputes',
         paragraphs: [
             'These Terms are governed by the laws of India. The parties should first attempt in good faith to resolve disputes through the support and grievance process.',
-            'Subject to mandatory law, unresolved disputes may be referred to arbitration under the Arbitration and Conciliation Act, 1996 by a sole arbitrator mutually appointed by the parties. The seat, venue, and exclusive court jurisdiction will be the city in India where the Service operator has its registered office. Proceedings will be in English. This clause does not prevent either party from seeking urgent interim relief from a competent court.'
+            `Subject to mandatory law, unresolved disputes may be referred to arbitration under the Arbitration and Conciliation Act, 1996 by a sole arbitrator mutually appointed by the parties. The seat and venue of arbitration will be Mumbai, Maharashtra, and courts in Mumbai, Maharashtra will have exclusive jurisdiction. Proceedings will be in English. This clause does not prevent either party from seeking urgent interim relief from a competent court.`
         ]
     },
     {
         title: '16. Changes and contact',
         paragraphs: [
             'We may update these Terms for legal, security, operational, or product reasons. Material changes will be notified through the Service or other reasonable means. Continued use after the effective date constitutes acceptance, except where fresh consent is required by law.',
-            'Questions, notices, and grievances should be submitted through the support or grievance contact displayed in the Service. The operator\'s legal name, registered-office address, and designated grievance contact should be inserted here before production launch.'
+            `The Service is operated by ${companyDetails.legalName}, with its registered office at ${companyDetails.registeredOffice}. The official website is ${companyDetails.website}.`,
+            `Questions, notices, privacy requests, and grievances may be submitted to ${companyDetails.supportEmail}, by telephone or WhatsApp at ${companyDetails.supportPhoneDisplay}, or to the ${companyDetails.grievanceOfficer}. Support is available ${companyDetails.operatingHours}. We aim to acknowledge requests within ${companyDetails.acknowledgementPeriod} and target resolution within ${companyDetails.resolutionTarget}, subject to applicable law and the complexity of the request.`
         ]
     }
 ];
@@ -117,8 +120,8 @@ export const privacySections = [
     {
         title: '1. Scope and India-only service',
         paragraphs: [
-            'This Privacy Notice explains how DocuCHQ collects, uses, stores, shares, and protects personal data when providing the Service. The Service is intended only for individuals acting for businesses established in India, including Indian exporters. It is not marketed or offered to businesses established outside India.',
-            'The business operating DocuCHQ acts as the data fiduciary for account, billing, support, security, and platform-administration data. For personal data contained in documents uploaded by a customer, the customer determines what is submitted and is responsible for having lawful authority to do so.'
+            `This Privacy Notice explains how ${companyDetails.legalName}, operating DocuCHQ through ${companyDetails.website}, collects, uses, stores, shares, and protects personal data when providing the Service. The Service is intended only for individuals acting for businesses established in India, including Indian exporters. It is not marketed or offered to businesses established outside India.`,
+            `${companyDetails.legalName} acts as the data fiduciary for account, billing, support, security, and platform-administration data. For personal data contained in documents uploaded by a customer, the customer determines what is submitted and is responsible for having lawful authority to do so.`
         ]
     },
     {
@@ -195,8 +198,8 @@ export const privacySections = [
     {
         title: '12. Grievances and requests',
         paragraphs: [
-            'Privacy requests and grievances should be submitted through the support or grievance contact displayed in the Service. We will acknowledge and handle requests in accordance with applicable law.',
-            'Before production launch, this Notice must be updated with the operator\'s legal name, registered-office address, contact details, and the name or designation and contact information of the applicable grievance officer or data-protection contact.'
+            `Privacy requests, consent-withdrawal requests, correction or deletion requests, and grievances may be sent to ${companyDetails.privacyEmail}, addressed to the ${companyDetails.grievanceOfficer}, or raised by telephone or WhatsApp at ${companyDetails.supportPhoneDisplay}.`,
+            `Our registered office is ${companyDetails.registeredOffice}. Support is available ${companyDetails.operatingHours}. We aim to acknowledge requests within ${companyDetails.acknowledgementPeriod} and target resolution within ${companyDetails.resolutionTarget}, subject to identity verification, applicable law, legal-retention requirements, and the complexity of the request.`
         ]
     },
     {
@@ -206,4 +209,3 @@ export const privacySections = [
         ]
     }
 ];
-
