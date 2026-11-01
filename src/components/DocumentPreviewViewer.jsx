@@ -15,7 +15,7 @@ function ZoomIcon({ type }) {
     );
 }
 
-export default function DocumentPreviewViewer({ loading, previewUrl, mimeType, title, height = 460 }) {
+export default function DocumentPreviewViewer({ loading, previewUrl, mimeType, title, height = 460, toolbarAction = null }) {
     const [zoom, setZoom] = useState(100);
     const [isDragging, setIsDragging] = useState(false);
     const canvasRef = useRef(null);
@@ -73,37 +73,40 @@ export default function DocumentPreviewViewer({ loading, previewUrl, mimeType, t
         <div className="document-preview-viewer" style={{ height: `${height}px` }}>
             <div className="document-preview-toolbar">
                 <span className="document-preview-toolbar-label">Preview</span>
-                <div className="document-preview-zoom-controls" aria-label="Preview zoom controls">
-                    <button
-                        type="button"
-                        className="document-preview-icon-button"
-                        onClick={() => changeZoom(-ZOOM_STEP)}
-                        disabled={!canZoom || zoom === MIN_ZOOM}
-                        aria-label="Zoom out"
-                        title="Zoom out"
-                    >
-                        <ZoomIcon type="out" />
-                    </button>
-                    <button
-                        type="button"
-                        className="document-preview-zoom-value"
-                        onClick={() => setZoom(100)}
-                        disabled={!canZoom}
-                        aria-label="Reset zoom to 100 percent"
-                        title="Reset zoom"
-                    >
-                        {zoom}%
-                    </button>
-                    <button
-                        type="button"
-                        className="document-preview-icon-button"
-                        onClick={() => changeZoom(ZOOM_STEP)}
-                        disabled={!canZoom || zoom === MAX_ZOOM}
-                        aria-label="Zoom in"
-                        title="Zoom in"
-                    >
-                        <ZoomIcon type="in" />
-                    </button>
+                <div className="document-preview-toolbar-actions">
+                    {toolbarAction}
+                    <div className="document-preview-zoom-controls" aria-label="Preview zoom controls">
+                        <button
+                            type="button"
+                            className="document-preview-icon-button"
+                            onClick={() => changeZoom(-ZOOM_STEP)}
+                            disabled={!canZoom || zoom === MIN_ZOOM}
+                            aria-label="Zoom out"
+                            title="Zoom out"
+                        >
+                            <ZoomIcon type="out" />
+                        </button>
+                        <button
+                            type="button"
+                            className="document-preview-zoom-value"
+                            onClick={() => setZoom(100)}
+                            disabled={!canZoom}
+                            aria-label="Reset zoom to 100 percent"
+                            title="Reset zoom"
+                        >
+                            {zoom}%
+                        </button>
+                        <button
+                            type="button"
+                            className="document-preview-icon-button"
+                            onClick={() => changeZoom(ZOOM_STEP)}
+                            disabled={!canZoom || zoom === MAX_ZOOM}
+                            aria-label="Zoom in"
+                            title="Zoom in"
+                        >
+                            <ZoomIcon type="in" />
+                        </button>
+                    </div>
                 </div>
             </div>
 

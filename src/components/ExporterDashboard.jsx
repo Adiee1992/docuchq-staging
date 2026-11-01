@@ -2296,7 +2296,6 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap' }}>
                                         <button type="button" onClick={() => switchPreviewFile(selectedDocument)} style={{ ...softBlueButtonStyle, padding: '7px 10px', background: previewingFile?.id === selectedDocument.id ? 'rgba(73,168,216,.18)' : '#FFFFFF' }}>Original</button>
                                         {formattedVersion && <button type="button" onClick={() => switchPreviewFile(formattedVersion)} style={{ ...softBlueButtonStyle, padding: '7px 10px', background: previewingFile?.id === formattedVersion.id ? 'rgba(73,168,216,.18)' : '#FFFFFF' }}>Formatted</button>}
-                                        {formattedVersion && <button type="button" onClick={() => downloadFormattedVersion(formattedVersion)} style={{ ...softBlueButtonStyle, padding: '7px 10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg>Download Formatted</button>}
                                     </div>
                                 );
                             })()}
@@ -2305,6 +2304,16 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                 previewUrl={previewUrl}
                                 mimeType={previewingFile?.mime_type || selectedDocument.mime_type}
                                 title={previewingFile?.file_name || selectedDocument.file_name}
+                                toolbarAction={(() => {
+                                    const formattedVersion = formattedVersions.find((version) => version.document_id === selectedDocument.id);
+                                    if (!formattedVersion || previewingFile?.id !== formattedVersion.id) return null;
+                                    return (
+                                        <button type="button" onClick={() => downloadFormattedVersion(formattedVersion)} style={{ ...softBlueButtonStyle, minHeight: '30px', padding: '5px 9px', display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg>
+                                            Download Formatted
+                                        </button>
+                                    );
+                                })()}
                             />
                         </div>
 

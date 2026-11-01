@@ -2494,6 +2494,14 @@ input {
     font-weight: 800;
 }
 
+.document-preview-toolbar-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-width: 0;
+}
+
 .document-preview-zoom-controls {
     display: inline-flex;
     align-items: center;
