@@ -329,6 +329,25 @@ const uploadFullSpan = {
 const trackTableColumns = '44px minmax(150px, 1.3fr) minmax(120px, 1fr) minmax(110px, 0.9fr) minmax(190px, 1.1fr) minmax(95px, 0.8fr) minmax(120px, 0.9fr) 120px 140px 250px';
 const trackTableMinWidth = 1425;
 const trackScrollableWidth = 1023;
+const stickyToggleStyle = {
+    position: 'sticky',
+    left: '20px',
+    zIndex: 4,
+    background: '#FFFFFF',
+    boxShadow: '-20px 0 0 #FFFFFF, 12px 0 0 #FFFFFF'
+};
+const stickyHeaderToggleStyle = {
+    ...stickyToggleStyle,
+    zIndex: 5,
+    background: '#F8FAFC',
+    boxShadow: '-20px 0 0 #F8FAFC, 12px 0 0 #F8FAFC'
+};
+const stickyDocumentToggleStyle = {
+    ...stickyToggleStyle,
+    background: '#FBFEFD',
+    boxShadow: '-20px 0 0 #FBFEFD, 12px 0 0 #FBFEFD',
+    alignSelf: 'stretch'
+};
 const stickyActionStyle = {
     position: 'sticky',
     right: 0,
@@ -1639,6 +1658,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                             display: 'flex',
                                             alignItems: 'center',
                                             whiteSpace: heading === 'Payment Method' ? 'normal' : 'nowrap',
+                                            ...(index === 0 ? stickyHeaderToggleStyle : {}),
                                             ...(index === 8 ? stickyHeaderStatusStyle : {}),
                                             ...(index === 9 ? stickyHeaderActionStyle : {})
                                         }}
@@ -1663,7 +1683,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                     return (
                                         <React.Fragment key={track.referenceId}>
                                             <div style={{ display: 'grid', gridTemplateColumns: trackTableColumns, padding: '14px 20px', borderTop: '1px solid #E2E8F0', alignItems: 'center', gap: '12px' }}>
-                                            <button onClick={() => setCollapsedTracks((current) => ({ ...current, [track.referenceId]: !collapsed }))} style={{ border: 'none', background: '#F1F5F9', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', color: '#334155', fontWeight: '800' }}>
+                                            <button onClick={() => setCollapsedTracks((current) => ({ ...current, [track.referenceId]: !collapsed }))} style={{ ...stickyToggleStyle, border: 'none', background: '#F1F5F9', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', color: '#334155', fontWeight: '800' }}>
                                                 {collapsed ? '+' : '-'}
                                             </button>
                                             <div>
@@ -1706,7 +1726,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                                     const formattedVersion = formattedVersions.find((version) => version.document_id === document.id);
                                                     return (
                                                         <div key={document.id} style={{ display: 'grid', gridTemplateColumns: trackTableColumns, alignItems: 'center', gap: '12px', padding: '10px 20px', borderTop: '1px solid #E2E8F0' }}>
-                                                            <span aria-hidden="true" />
+                                                            <span aria-hidden="true" style={stickyDocumentToggleStyle} />
                                                             <div style={{ gridColumn: '2 / span 3' }}>
                                                                 <p style={{ margin: 0, color: '#0F172A', fontSize: '13px', fontWeight: '800', overflowWrap: 'anywhere' }}>{document.file_name}</p>
                                                                 <p style={{ margin: '4px 0 0 0', color: '#94A3B8', fontSize: '12px' }}>{formatBytes(document.file_size)}</p>
