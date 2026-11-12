@@ -14,6 +14,7 @@ import AuthConfirm from './components/AuthConfirm';
 import ResetPassword from './components/ResetPassword';
 import SalesLeadModal from './components/SalesLeadModal';
 import ProductWalkthroughModal from './components/ProductWalkthroughModal';
+import LegalAcceptanceGate from './components/LegalAcceptanceGate';
 import { supabase } from './supabaseClient';
 import { ensureProfile } from './utils/profile';
 import { getErrorMessage } from './utils/errors';
@@ -170,12 +171,14 @@ function AppContent() {
                         path="/dashboard/exporter"
                         element={
                             <ProtectedRoute allowedRoles={['exporter', 'manager', 'admin']} session={session} profile={profile} loading={authLoading}>
-                                <ExporterDashboard
-                                    session={session}
-                                    userProfile={profile}
-                                    onProfileUpdated={setProfile}
-                                    onLogout={handleLogout}
-                                />
+                                <LegalAcceptanceGate session={session} onLogout={handleLogout}>
+                                    <ExporterDashboard
+                                        session={session}
+                                        userProfile={profile}
+                                        onProfileUpdated={setProfile}
+                                        onLogout={handleLogout}
+                                    />
+                                </LegalAcceptanceGate>
                             </ProtectedRoute>
                         }
                     />
@@ -184,10 +187,12 @@ function AppContent() {
                         path="/dashboard/verifier"
                         element={
                             <ProtectedRoute allowedRoles={['verifier', 'manager', 'admin']} session={session} profile={profile} loading={authLoading}>
-                                <VerifierDashboard
-                                    profile={profile}
-                                    onLogout={handleLogout}
-                                />
+                                <LegalAcceptanceGate session={session} onLogout={handleLogout}>
+                                    <VerifierDashboard
+                                        profile={profile}
+                                        onLogout={handleLogout}
+                                    />
+                                </LegalAcceptanceGate>
                             </ProtectedRoute>
                         }
                     />
@@ -196,10 +201,12 @@ function AppContent() {
                         path="/dashboard/manager"
                         element={
                             <ProtectedRoute allowedRoles={['manager', 'admin']} session={session} profile={profile} loading={authLoading}>
-                                <ManagerDashboard
-                                    profile={profile}
-                                    onLogout={handleLogout}
-                                />
+                                <LegalAcceptanceGate session={session} onLogout={handleLogout}>
+                                    <ManagerDashboard
+                                        profile={profile}
+                                        onLogout={handleLogout}
+                                    />
+                                </LegalAcceptanceGate>
                             </ProtectedRoute>
                         }
                     />
@@ -208,7 +215,9 @@ function AppContent() {
                         path="/dashboard/admin"
                         element={
                             <ProtectedRoute allowedRoles={['admin']} session={session} profile={profile} loading={authLoading}>
-                                <AdminPanel />
+                                <LegalAcceptanceGate session={session} onLogout={handleLogout}>
+                                    <AdminPanel />
+                                </LegalAcceptanceGate>
                             </ProtectedRoute>
                         }
                     />

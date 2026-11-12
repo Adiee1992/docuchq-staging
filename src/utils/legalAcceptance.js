@@ -57,3 +57,16 @@ export async function recordLegalAcceptance(user, fallbackMethod = 'password') {
     if (error) throw error;
     window.localStorage.removeItem(LEGAL_ACCEPTANCE_STORAGE_KEY);
 }
+
+export async function acceptCurrentLegalDocuments(user) {
+    if (!user) throw new Error('Authentication is required to record legal acceptance.');
+
+    const signupMethod = user?.app_metadata?.provider === 'google' ? 'google' : 'password';
+    const { data, error } = await supabase.rpc('record_current_legal_acceptance', {
+        signup_method_input: signupMethod,
+        client_accepted_at_input: new Date().toISOString()
+    });
+
+    if (error) throw error;
+    return data;
+}

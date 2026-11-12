@@ -165,8 +165,9 @@ export const privacySections = [
     {
         title: '7. Retention and deletion',
         paragraphs: [
-            'We retain personal data only for as long as reasonably necessary for the stated purposes, active accounts and workflows, contractual commitments, security, backup cycles, dispute resolution, audit, and legal or regulatory requirements.',
-            'On a valid deletion request or account closure, data will be deleted or anonymised when no longer required, subject to legal holds, statutory retention, fraud prevention, backups, completed transactions, and the rights of other parties. Customers should download any records they must retain before requesting deletion.'
+            'Profile details are retained while an account remains active. Clearance tracks, original and formatted documents, comments, and related operational records are ordinarily retained for one year from the date the track first becomes compliant. Support records, sales inquiries, audit records, and security records are ordinarily retained for up to one year from the applicable closure, last interaction, or creation date.',
+            'When account deletion is requested, the account and its operational data remain recoverable for 14 days and are then deleted or anonymised. Uploaded files are removed from storage as part of the deletion process. The IEC trial-redemption record is retained for one year to prevent repeated introductory benefits.',
+            'Invoices, payments, financially relevant plan and credit records, and legal-acceptance evidence may be retained for eight years to meet accounting, tax, contractual, evidentiary, and legal obligations. A legal hold may suspend scheduled deletion where records are needed for a dispute, bank query, investigation, regulatory request, litigation, fraud prevention, or another legal obligation. Customers should download any records they must retain before requesting deletion.'
         ]
     },
     {

@@ -90,9 +90,9 @@ begin
         auth.uid(),
         coalesce(auth.jwt() ->> 'email', ''),
         '2026-11-01',
-        '2026-11-01',
+        '2026-11-01-v2',
         'f80f611c5a92b1c87756468b576726cfb0a1655030b03b06fbb067dfe07ea449',
-        '9b5c0d175715f0280aee45f3c245c8d5ea7f5eea4e336f43ed3b346504f880c0',
+        'bdf7b4b56f2221fa23638b959a293fdda810088d61151113e4109f76593154ec',
         true,
         true,
         'I agree to the Terms of Use.',
@@ -113,7 +113,7 @@ begin
         from public.user_legal_acceptances
         where user_id = auth.uid()
           and terms_version = '2026-11-01'
-          and privacy_version = '2026-11-01';
+          and privacy_version = '2026-11-01-v2';
     end if;
 
     return acceptance_id;
