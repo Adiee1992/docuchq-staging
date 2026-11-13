@@ -1898,12 +1898,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                 <p style={{ margin: '0 0 5px', color: '#64748B', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Support Email</p>
                                 <a href={`mailto:${companyDetails.supportEmail}`} style={{ color: '#2789B8', fontSize: '15px', fontWeight: '800', textDecoration: 'none', overflowWrap: 'anywhere' }}>{companyDetails.supportEmail}</a>
                             </div>
-                            <div style={{ padding: '15px 16px', border: '1px solid #E2E8F0', borderRadius: '8px', background: '#F8FAFC' }}>
-                                <p style={{ margin: '0 0 5px', color: '#64748B', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Privacy and Grievances</p>
-                                <p style={{ margin: 0, color: '#0F172A', fontSize: '13px', fontWeight: '700' }}>{companyDetails.grievanceOfficer} · acknowledgement within {companyDetails.acknowledgementPeriod} · target resolution within {companyDetails.resolutionTarget}</p>
-                            </div>
                         </div>
-                        <p style={{ margin: '14px 0 0', color: '#64748B', fontSize: '11px', fontWeight: '700' }}>{companyDetails.operatingHours}</p>
                     </div>
                 </div>
             )}
