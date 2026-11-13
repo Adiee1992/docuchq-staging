@@ -81,10 +81,10 @@ const steps = [
 ];
 
 const features = [
-    { icon: 'document', title: 'Document Validation', text: 'Identify discrepancies in your export documents before bank submission.' },
-    { icon: 'shield', title: 'Pre-submission Review', text: 'Ensure all documents are complete and aligned with requirements.' },
-    { icon: 'list', title: 'Issue Resolution Support', text: 'Get clear insights on what needs to be corrected.' },
-    { icon: 'box', title: 'Export Clearance Readiness', text: 'Submit accurate documents and reduce the risk of bank queries.' }
+    { icon: 'document', title: 'Check Documents Faster', text: 'Spend less time manually checking export paperwork.' },
+    { icon: 'shield', title: 'Identify Errors Early', text: 'Spot mismatches before submitting documents to the bank.' },
+    { icon: 'list', title: 'Know What Needs Fixing', text: 'Understand which documents need attention or correction.' },
+    { icon: 'box', title: 'Keep Export Documents Organised', text: 'Manage your export documentation in one place.' }
 ];
 
 export default function HomeLanding({ onTalkToSales }) {
