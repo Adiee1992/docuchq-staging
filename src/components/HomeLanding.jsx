@@ -75,7 +75,7 @@ function DashboardPreview() {
 }
 
 const steps = [
-    { icon: 'upload', title: 'Upload Documents', text: 'Upload export documents such as invoice, packing list, shipping bill and bill of lading.' },
+    { icon: 'upload', title: 'Upload Documents', text: 'Bulk upload your export documents and let DocuCHQ automatically identify and categorize each file.' },
     { icon: 'review', title: 'Review Discrepancies', text: 'DocuCHQ identifies errors, mismatches and missing information.' },
     { icon: 'submit', title: 'Submit with Confidence', text: 'Resolve issues and submit your documents to the bank with confidence.' }
 ];

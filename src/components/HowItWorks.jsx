@@ -15,10 +15,10 @@ export const howItWorksSteps = [
     {
         number: '02',
         title: 'Upload Documents',
-        summary: 'Upload Invoice, Packing List, Shipping Bill, BL/AWB, LC and other supporting documents.',
+        summary: 'Bulk upload all shipment documents at once. DocuCHQ automatically identifies and categorizes each file.',
         details: [
-            'Keep each shipment document under the correct clearance.',
-            'Upload supporting files so the reviewer can check the full document set.'
+            'Upload invoices, packing lists, shipping bills, BL/AWB, LC and supporting documents together.',
+            'No manual sorting is needed—each document is automatically placed in the correct category for review.'
         ],
         icon: 'upload'
     },
