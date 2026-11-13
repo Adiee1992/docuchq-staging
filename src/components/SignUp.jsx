@@ -32,7 +32,6 @@ export default function SignUp({ onSignInClick }) {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [companyName, setCompanyName] = useState('');
-    const [iecCode, setIecCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [isVerificationSent, setIsVerificationSent] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
@@ -48,7 +47,6 @@ export default function SignUp({ onSignInClick }) {
         setPassword('');
         setConfirmPassword('');
         setCompanyName('');
-        setIecCode('');
         setTermsAccepted(false);
         setPrivacyAccepted(false);
     };
@@ -63,8 +61,6 @@ export default function SignUp({ onSignInClick }) {
     };
     const passwordIsValid = Object.values(passwordChecks).every(Boolean);
     const legalAcceptanceIsValid = termsAccepted && privacyAccepted;
-    const normalizedIecCode = iecCode.trim().toUpperCase();
-    const iecCodeIsValid = /^[A-Z0-9]{10}$/.test(normalizedIecCode);
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -79,11 +75,6 @@ export default function SignUp({ onSignInClick }) {
             return;
         }
 
-        if (!iecCodeIsValid) {
-            showToast('Enter a valid 10-character IEC.', 'error');
-            return;
-        }
-
         setLoading(true);
 
         const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -95,7 +86,6 @@ export default function SignUp({ onSignInClick }) {
                     first_name: firstName,
                     last_name: lastName,
                     company_name: companyName,
-                    iec_code: normalizedIecCode,
                     role: 'exporter',
                     ...buildLegalAcceptanceMetadata('password')
                 }
@@ -105,12 +95,6 @@ export default function SignUp({ onSignInClick }) {
         setLoading(false);
 
         if (authError) {
-            const authErrorValue = `${authError?.code || ''} ${authError?.message || ''}`.toLowerCase();
-            if (authErrorValue.includes('iec')) {
-                showToast('This IEC has already been registered and is not eligible for another account.', 'error');
-                return;
-            }
-
             if (isExistingAccountResponse(authError)) {
                 showToast('Please check your email or sign in if you already have an account.', 'info');
                 setIsVerificationSent(true);
@@ -218,23 +202,6 @@ export default function SignUp({ onSignInClick }) {
                     <label htmlFor="companyName">Company Name</label>
                     <input type="text" id="companyName" placeholder="e.g. Delta Exports Ltd." value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
 
-                    <label htmlFor="iecCode">IEC</label>
-                    <input
-                        type="text"
-                        id="iecCode"
-                        placeholder="10-character IEC"
-                        value={iecCode}
-                        onChange={(e) => setIecCode(e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 10))}
-                        minLength="10"
-                        maxLength="10"
-                        autoCapitalize="characters"
-                        autoComplete="off"
-                        required
-                    />
-                    <p className={iecCodeIsValid ? 'field-requirement met' : 'field-requirement'}>
-                        This IEC is permanent and cannot be changed after registration.
-                    </p>
-
                     <label htmlFor="email">Work Email</label>
                     <input type="email" id="email" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
 
@@ -281,7 +248,7 @@ export default function SignUp({ onSignInClick }) {
                         </label>
                     </div>
 
-                    <button type="submit" className="continue-btn" disabled={loading || !passwordIsValid || !legalAcceptanceIsValid || !iecCodeIsValid}>
+                    <button type="submit" className="continue-btn" disabled={loading || !passwordIsValid || !legalAcceptanceIsValid}>
                         {loading ? 'Sending verification link...' : 'Create Account'}
                     </button>
                 </form>

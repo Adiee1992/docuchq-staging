@@ -276,14 +276,6 @@ const clearanceLabelStyle = {
     paddingBottom: '0'
 };
 
-const disabledFieldStyle = {
-    ...fieldStyle,
-    border: '1px solid #D4D9DE',
-    background: '#F1F3F5',
-    color: '#7A8691',
-    cursor: 'not-allowed'
-};
-
 const uploadGridStyle = {
     display: 'grid',
     gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
@@ -523,7 +515,6 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
         firstName: '',
         lastName: '',
         companyName: '',
-        iec: '',
         mobileNumber: '',
         email: '',
         address: '',
@@ -592,7 +583,6 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
             firstName: userProfile?.first_name || metadata.first_name || '',
             lastName: userProfile?.last_name || metadata.last_name || '',
             companyName: userProfile?.company_name || metadata.company_name || '',
-            iec: userProfile?.iec_code || metadata.iec_code || '',
             mobileNumber: getIndianMobileDigits(userProfile?.mobile_number || metadata.mobile_number),
             email: session?.user?.email || userProfile?.email || '',
             address: userProfile?.address || metadata.address || '',
@@ -1895,17 +1885,6 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                 <input required value={editProfileForm.companyName} onChange={(event) => setEditProfileForm((current) => ({ ...current, companyName: event.target.value }))} autoComplete="organization" style={fieldStyle} />
                             </div>
                             <div style={{ gridColumn: '1 / -1' }}>
-                                <label style={labelStyle}>IEC</label>
-                                <input
-                                    value={editProfileForm.iec}
-                                    readOnly
-                                    aria-readonly="true"
-                                    placeholder="Not recorded"
-                                    style={{ ...disabledFieldStyle, cursor: 'default' }}
-                                />
-                                <p style={{ margin: '7px 0 0 0', color: '#64748B', fontSize: '12px', lineHeight: 1.5 }}>IEC is permanently linked to this account and cannot be changed.</p>
-                            </div>
-                            <div style={{ gridColumn: '1 / -1' }}>
                                 <label style={labelStyle}>Address</label>
                                 <textarea
                                     value={editProfileForm.address}
@@ -1981,7 +1960,6 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                     <form onSubmit={requestAccountDeletion} style={{ width: 'min(500px, calc(100vw - 48px))', background: '#FFFFFF', borderRadius: '8px', padding: '28px 30px', boxSizing: 'border-box', boxShadow: '0 24px 60px rgba(15,23,42,0.28)' }}>
                         <h2 id="delete-account-title" style={{ margin: '0 0 8px', color: '#991B1B', fontSize: '21px' }}>Delete Account?</h2>
                         <p style={{ margin: '0 0 12px', color: '#475569', fontSize: '14px', lineHeight: 1.6 }}>Your account and its data cannot be recovered after permanent deletion. You have 14 days to sign in and restore the account. After that period, deletion becomes permanent.</p>
-                        <p style={{ margin: '0 0 20px', color: '#64748B', fontSize: '12px', lineHeight: 1.55 }}>Your IEC trial-redemption record will be retained for one year to prevent another free clearance being claimed with the same IEC.</p>
                         <label style={labelStyle}>Profile Password *</label>
                         <input type="password" required autoComplete="current-password" value={deleteAccountPassword} onChange={(event) => setDeleteAccountPassword(event.target.value)} placeholder="Enter your password to confirm" style={fieldStyle} />
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '22px' }}>

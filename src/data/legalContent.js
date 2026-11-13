@@ -166,7 +166,7 @@ export const privacySections = [
         title: '7. Retention and deletion',
         paragraphs: [
             'Profile details are retained while an account remains active. Clearance tracks, original and formatted documents, comments, and related operational records are ordinarily retained for one year from the date the track first becomes compliant. Support records, sales inquiries, audit records, and security records are ordinarily retained for up to one year from the applicable closure, last interaction, or creation date.',
-            'When account deletion is requested, the account and its operational data remain recoverable for 14 days and are then deleted or anonymised. Uploaded files are removed from storage as part of the deletion process. The IEC trial-redemption record is retained for one year to prevent repeated introductory benefits.',
+            'When account deletion is requested, the account and its operational data remain recoverable for 14 days and are then deleted or anonymised. Uploaded files are removed from storage as part of the deletion process. Introductory-benefit records may be retained for one year to prevent repeated claims.',
             'Invoices, payments, financially relevant plan and credit records, and legal-acceptance evidence may be retained for eight years to meet accounting, tax, contractual, evidentiary, and legal obligations. A legal hold may suspend scheduled deletion where records are needed for a dispute, bank query, investigation, regulatory request, litigation, fraud prevention, or another legal obligation. Customers should download any records they must retain before requesting deletion.'
         ]
     },

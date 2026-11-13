@@ -265,7 +265,7 @@ export default function ManagerDashboard({ profile, onLogout }) {
         ] = await Promise.all([
             supabase.from('documents').select('*').order('submitted_at', { ascending: false }),
             supabase.from('clearance_tracks').select('id, profile_id, reference_id, customer_name, destination_country, invoice_currency, ad_bank_name, payment_method, created_at, updated_at').order('created_at', { ascending: false }),
-            supabase.from('profiles').select('id, email, first_name, last_name, company_name, mobile_number, iec_code, address, gstin, pan, account_status, role, available_clearances, created_at, updated_at, deletion_requested_at, deletion_scheduled_for').order('created_at', { ascending: false }),
+            supabase.from('profiles').select('id, email, first_name, last_name, company_name, mobile_number, address, gstin, pan, account_status, role, available_clearances, created_at, updated_at, deletion_requested_at, deletion_scheduled_for').order('created_at', { ascending: false }),
             supabase.from('sales_leads').select('id, full_name, company_name, email, mobile_number, comments, status, created_at, viewed_at').order('created_at', { ascending: false }),
             supabase.from('customer_issues').select('id, profile_id, full_name, company_name, email, mobile_number, comments, status, created_at, viewed_at').order('created_at', { ascending: false }),
             supabase.from('free_credit_grants').select('id, profile_id, credits, created_at').order('created_at', { ascending: false }),

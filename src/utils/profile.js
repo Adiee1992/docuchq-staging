@@ -84,7 +84,6 @@ export async function ensureProfile(user) {
         first_name: metadata.first_name || '',
         last_name: metadata.last_name || '',
         company_name: metadata.company_name || '',
-        iec_code: metadata.iec_code || '',
         mobile_number: metadata.mobile_number || '',
         address: metadata.address || '',
         gstin: metadata.gstin || '',
