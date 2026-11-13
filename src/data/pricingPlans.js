@@ -1,22 +1,22 @@
 export const pricingPlans = [
     {
-        name: 'Standard',
-        price: '₹4,999',
-        period: ' / 30 days',
-        desc: 'For exporters with a regular monthly review requirement.',
+        name: 'Single Clearance',
+        price: '₹599',
+        period: '',
+        desc: 'For exporters who need one document clearance.',
         features: [
-            '10 clearances'
+            '1 clearance'
         ],
         cta: 'Get Started Now',
         popular: false
     },
     {
         name: 'Business',
-        price: '₹9,999',
-        period: ' / 30 days',
-        desc: 'For high-volume exporters with larger monthly review requirements.',
+        price: '₹4,999',
+        period: '',
+        desc: 'For exporters with a regular document review requirement.',
         features: [
-            '25 clearances'
+            '10 clearances'
         ],
         cta: 'Get Started Now',
         popular: false

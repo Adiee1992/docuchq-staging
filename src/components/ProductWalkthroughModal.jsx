@@ -37,7 +37,7 @@ function WalkthroughScreen({ scene }) {
         <div className={`walkthrough-product walkthrough-scene-${scene}`}>
             <div className="walkthrough-appbar">
                 <div><img src={logoIcon} alt="" /><b>Docu<span>CHQ</span></b></div>
-                <div className="walkthrough-app-pills"><span>12 Days Left</span><span>Trial Account</span><span>Clearances: 1</span><i>M</i></div>
+                <div className="walkthrough-app-pills"><span>Clearances: 1</span><i>M</i></div>
             </div>
             <div className="walkthrough-workspace">
                 <div className="walkthrough-dashboard-head">

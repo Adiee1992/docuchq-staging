@@ -227,7 +227,7 @@ export default function ManagerDashboard({ profile, onLogout }) {
     const [addingFreeCredits, setAddingFreeCredits] = useState(false);
     const [activationCustomer, setActivationCustomer] = useState(null);
     const [activatingPlan, setActivatingPlan] = useState(false);
-    const [activationForm, setActivationForm] = useState({ planType: 'standard', amount: '4999', paymentMethod: 'Bank Transfer', paymentReference: '', paymentDate: new Date().toISOString().slice(0, 10), notes: '' });
+    const [activationForm, setActivationForm] = useState({ planType: 'standard', amount: '599', paymentMethod: 'Bank Transfer', paymentReference: '', paymentDate: new Date().toISOString().slice(0, 10), notes: '' });
     const [queryDiagnostics, setQueryDiagnostics] = useState({ count: 0, error: '', checkedAt: '' });
 
     const verifiers = useMemo(() => profiles.filter((item) => item.role === 'verifier'), [profiles]);
@@ -551,7 +551,7 @@ export default function ManagerDashboard({ profile, onLogout }) {
 
     const openPlanActivation = (customer) => {
         setActivationCustomer(customer);
-        setActivationForm({ planType: 'standard', amount: '4999', paymentMethod: 'Bank Transfer', paymentReference: '', paymentDate: new Date().toISOString().slice(0, 10), notes: '' });
+        setActivationForm({ planType: 'standard', amount: '599', paymentMethod: 'Bank Transfer', paymentReference: '', paymentDate: new Date().toISOString().slice(0, 10), notes: '' });
     };
 
     const confirmPlanActivation = async (event) => {
@@ -572,7 +572,7 @@ export default function ManagerDashboard({ profile, onLogout }) {
             showToast(error.message, 'error');
             return;
         }
-        showToast(`${activationForm.planType === 'business' ? 'Business' : 'Standard'} plan activated for 30 days.`, 'success');
+        showToast(`${activationForm.planType === 'business' ? 'Business' : 'Single Clearance'} pack activated.`, 'success');
         setActivationCustomer(null);
         loadData();
     };
@@ -1115,14 +1115,14 @@ export default function ManagerDashboard({ profile, onLogout }) {
                         <h2 id="activate-plan-title" style={{ margin: '0 0 6px', color: '#0F172A', fontSize: '21px' }}>Activate Customer Plan</h2>
                         <p style={{ margin: '0 0 20px', color: '#64748B', fontSize: '14px' }}>{`${activationCustomer.first_name || ''} ${activationCustomer.last_name || ''}`.trim() || activationCustomer.email}</p>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                            <label style={{ color: '#334155', fontSize: '13px', fontWeight: '800' }}>Plan<select value={activationForm.planType} onChange={(e) => setActivationForm((form) => ({ ...form, planType: e.target.value, amount: e.target.value === 'business' ? '9999' : '4999' }))} style={{ width: '100%', height: '42px', marginTop: '7px', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0 12px', background: '#FFFFFF' }}><option value="standard">Standard - 10 tracks</option><option value="business">Business - 25 tracks</option></select></label>
+                            <label style={{ color: '#334155', fontSize: '13px', fontWeight: '800' }}>Clearance Pack<select value={activationForm.planType} onChange={(e) => setActivationForm((form) => ({ ...form, planType: e.target.value, amount: e.target.value === 'business' ? '4999' : '599' }))} style={{ width: '100%', height: '42px', marginTop: '7px', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0 12px', background: '#FFFFFF' }}><option value="standard">Single Clearance - 1</option><option value="business">Business - 10 clearances</option></select></label>
                             <label style={{ color: '#334155', fontSize: '13px', fontWeight: '800' }}>Amount (INR)<input required min="0" step="0.01" type="number" value={activationForm.amount} onChange={(e) => setActivationForm((form) => ({ ...form, amount: e.target.value }))} style={{ width: '100%', height: '42px', boxSizing: 'border-box', marginTop: '7px', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0 12px' }} /></label>
                             <label style={{ color: '#334155', fontSize: '13px', fontWeight: '800' }}>Payment Method<select required value={activationForm.paymentMethod} onChange={(e) => setActivationForm((form) => ({ ...form, paymentMethod: e.target.value }))} style={{ width: '100%', height: '42px', boxSizing: 'border-box', marginTop: '7px', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0 12px', background: '#FFFFFF' }}><option value="Bank Transfer">Bank Transfer</option><option value="UPI">UPI</option></select></label>
                             <label style={{ color: '#334155', fontSize: '13px', fontWeight: '800' }}>Payment Date<input required type="date" value={activationForm.paymentDate} onChange={(e) => setActivationForm((form) => ({ ...form, paymentDate: e.target.value }))} style={{ width: '100%', height: '42px', boxSizing: 'border-box', marginTop: '7px', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0 12px' }} /></label>
                         </div>
                         <label style={{ display: 'block', marginTop: '14px', color: '#334155', fontSize: '13px', fontWeight: '800' }}>Payment Reference<input required value={activationForm.paymentReference} onChange={(e) => setActivationForm((form) => ({ ...form, paymentReference: e.target.value }))} placeholder="UTR, bank reference, or receipt number" style={{ width: '100%', height: '42px', boxSizing: 'border-box', marginTop: '7px', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0 12px' }} /></label>
                         <label style={{ display: 'block', marginTop: '14px', color: '#334155', fontSize: '13px', fontWeight: '800' }}>Notes<textarea value={activationForm.notes} onChange={(e) => setActivationForm((form) => ({ ...form, notes: e.target.value }))} rows="3" style={{ width: '100%', boxSizing: 'border-box', marginTop: '7px', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '10px 12px', resize: 'vertical' }} /></label>
-                        <p style={{ margin: '14px 0 0', color: '#64748B', fontSize: '12px' }}>Activation replaces the current plan and remains valid for 30 days. The payment is recorded in transactions and audit logs.</p>
+                        <p style={{ margin: '14px 0 0', color: '#64748B', fontSize: '12px' }}>Activation replaces the current clearance pack. Clearances do not expire by date, and the payment is recorded in transactions and audit logs.</p>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '22px' }}><button type="button" disabled={activatingPlan} onClick={() => setActivationCustomer(null)} style={{ border: '1px solid #CBD5E1', background: '#FFFFFF', color: '#334155', borderRadius: '8px', padding: '10px 16px', fontWeight: '800' }}>Cancel</button><button type="submit" disabled={activatingPlan} style={{ border: 'none', background: '#49A8D8', color: '#FFFFFF', borderRadius: '8px', padding: '10px 16px', fontWeight: '800', opacity: activatingPlan ? .65 : 1 }}>{activatingPlan ? 'Activating...' : 'Confirm Activation'}</button></div>
                     </form>
                 </div>

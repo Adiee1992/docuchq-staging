@@ -497,30 +497,6 @@ function CreditsIcon({ size = 17 }) {
     );
 }
 
-function PlanIcon({ planType, size = 16 }) {
-    const icon = planType === 'business' ? (
-        <>
-            <rect x="3" y="7" width="18" height="13" rx="2" />
-            <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            <path d="M3 12h18" />
-            <path d="M10 12v2h4v-2" />
-        </>
-    ) : planType === 'trial' ? (
-        <>
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 7v5l3 2" />
-        </>
-    ) : (
-        <path d="m12 2.8 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-2.9L6.4 20l1.1-6.2L3 9.4l6.2-.9L12 2.8z" />
-    );
-
-    return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: `0 0 ${size}px` }}>
-            {icon}
-        </svg>
-    );
-}
-
 export default function ExporterDashboard({ session, userProfile, onProfileUpdated, onLogout }) {
     const { showToast } = useToast();
     const userId = session?.user?.id || userProfile?.id;
@@ -869,8 +845,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
             ? { plan_type: 'trial', status: fallbackCredits > 0 ? 'active' : 'exhausted', track_limit: fallbackCredits, tracks_used: 0, legacyFallback: true }
             : planData;
         setCurrentPlan(resolvedPlan || null);
-        const resolvedPlanExpired = Boolean(resolvedPlan?.expires_at && new Date(resolvedPlan.expires_at) <= new Date());
-        const resolvedPlanActive = resolvedPlan?.status === 'active' && !resolvedPlanExpired;
+        const resolvedPlanActive = resolvedPlan?.status === 'active';
         setAvailableClearances(resolvedPlanActive ? Math.max(0, (resolvedPlan?.track_limit ?? fallbackCredits) - (resolvedPlan?.tracks_used ?? 0)) : 0);
     };
 
@@ -968,16 +943,9 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
         total: dateFilteredTracks.length
     }), [dateFilteredTracks]);
 
-    const planExpired = Boolean(currentPlan?.expires_at && new Date(currentPlan.expires_at) <= new Date());
-    const planActive = currentPlan?.status === 'active' && !planExpired;
+    const planActive = currentPlan?.status === 'active';
     const canCreateClearance = planActive && (availableClearances ?? 0) > 0;
-    const planName = currentPlan?.plan_type
-        ? `${currentPlan.plan_type.charAt(0).toUpperCase()}${currentPlan.plan_type.slice(1)}`
-        : 'No Plan';
     const clearanceDisplay = planActive ? (availableClearances ?? 0) : 0;
-    const planDaysRemaining = currentPlan?.expires_at
-        ? Math.max(0, Math.ceil((new Date(currentPlan.expires_at).getTime() - Date.now()) / (24 * 60 * 60 * 1000)))
-        : null;
 
     const openUploadModal = (track = null) => {
         setUploadForm({
@@ -1488,15 +1456,6 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                 </div>
 
                 <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {planDaysRemaining !== null && (
-                        <span aria-label={`${planDaysRemaining} days remaining on the current plan`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: '34px', padding: '7px 13px', border: '1px solid rgba(73, 168, 216, 0.34)', borderRadius: '20px', background: 'rgba(73, 168, 216, 0.08)', color: '#2789B8', boxSizing: 'border-box', whiteSpace: 'nowrap', fontSize: '13px', fontWeight: '800' }}>
-                            {planDaysRemaining} Day{planDaysRemaining === 1 ? '' : 's'} Left
-                        </span>
-                    )}
-                    <button type="button" onClick={openPayments} aria-label={`Open ${planName} account details`} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', padding: '8px 14px', borderRadius: '20px', whiteSpace: 'nowrap', boxSizing: 'border-box', cursor: 'pointer', fontFamily: 'inherit', color: '#475569' }}>
-                        <PlanIcon planType={currentPlan?.plan_type} />
-                        <span style={{ fontSize: '13px', fontWeight: '700' }}>{planName} Account</span>
-                    </button>
                     <button type="button" className="credits-counter" onClick={openPayments} aria-label="Open payments and subscriptions" style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(73, 168, 216, 0.1)', border: '1px solid rgba(73, 168, 216, 0.32)', padding: '8px 14px', borderRadius: '20px', whiteSpace: 'nowrap', boxSizing: 'border-box', cursor: 'pointer', fontFamily: 'inherit' }}>
                         <span style={{ display: 'flex', color: '#2789B8' }}><CreditsIcon /></span>
                         <span className="credits-label" style={{ fontSize: '13px', fontWeight: '600', color: '#2789B8' }}>
@@ -1783,9 +1742,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#0F172A' }}>
                                     <CreditsIcon size={28} />
                                     <p style={{ margin: 0, fontSize: '34px', lineHeight: 1, fontWeight: '800' }}>{clearanceDisplay}</p>
-                                    {currentPlan?.plan_type !== 'trial' && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginLeft: '4px', padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: '999px', background: '#FFFFFF', color: '#475569', fontSize: '12px', fontWeight: '800', whiteSpace: 'nowrap' }}><PlanIcon planType={currentPlan?.plan_type} size={14} />{planName} Account</span>}
                                 </div>
-                                {currentPlan?.expires_at && <p style={{ margin: '8px 0 0', color: '#64748B', fontSize: '12px' }}>Valid until {new Date(currentPlan.expires_at).toLocaleDateString('en-IN')}</p>}
                             </div>
                             <button type="button" onClick={() => setPaymentInstructionsOpen(true)} style={{ border: 'none', background: '#49A8D8', color: '#FFFFFF', borderRadius: '8px', padding: '11px 18px', cursor: 'pointer', fontWeight: '800', fontFamily: 'inherit' }}>
                                 Payment Instructions
@@ -1832,15 +1789,17 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                     ) : transactions.length === 0 ? (
                                         <div style={{ padding: '28px 16px', textAlign: 'center', color: '#94A3B8', fontSize: '13px' }}>No transactions yet.</div>
                                     ) : (
-                                        transactions.map((transaction) => (
-                                            <div key={transaction.id} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.5fr 0.7fr 0.9fr 0.8fr', gap: '14px', padding: '12px 16px', borderTop: '1px solid #E2E8F0', alignItems: 'center', color: '#475569', fontSize: '13px' }}>
-                                                <span>{formatDate(transaction.created_at)}</span>
-                                                <span>{formatTransactionDescription(transaction)}</span>
-                                                <strong style={{ color: transaction.credits >= 0 ? '#15803D' : '#B91C1C' }}>{transaction.credits >= 0 ? '+' : ''}{transaction.credits}</strong>
-                                                <span>{transaction.amount == null ? '-' : new Intl.NumberFormat('en-IN', { style: 'currency', currency: transaction.currency || 'INR' }).format(transaction.amount)}</span>
-                                                <span style={{ width: 'fit-content', padding: '4px 8px', borderRadius: '999px', background: transaction.status === 'completed' ? '#DCFCE7' : '#FEF3C7', color: transaction.status === 'completed' ? '#166534' : '#92400E', fontSize: '11px', fontWeight: '800', textTransform: 'capitalize' }}>{transaction.status}</span>
-                                            </div>
-                                        ))
+                                        <div style={{ maxHeight: '196px', overflowY: 'auto' }}>
+                                            {transactions.map((transaction) => (
+                                                <div key={transaction.id} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.5fr 0.7fr 0.9fr 0.8fr', gap: '14px', minHeight: '49px', boxSizing: 'border-box', padding: '12px 16px', borderTop: '1px solid #E2E8F0', alignItems: 'center', color: '#475569', fontSize: '13px' }}>
+                                                    <span>{formatDate(transaction.created_at)}</span>
+                                                    <span>{formatTransactionDescription(transaction)}</span>
+                                                    <strong style={{ color: transaction.credits >= 0 ? '#15803D' : '#B91C1C' }}>{transaction.credits >= 0 ? '+' : ''}{transaction.credits}</strong>
+                                                    <span>{transaction.amount == null ? '-' : new Intl.NumberFormat('en-IN', { style: 'currency', currency: transaction.currency || 'INR' }).format(transaction.amount)}</span>
+                                                    <span style={{ width: 'fit-content', padding: '4px 8px', borderRadius: '999px', background: transaction.status === 'completed' ? '#DCFCE7' : '#FEF3C7', color: transaction.status === 'completed' ? '#166534' : '#92400E', fontSize: '11px', fontWeight: '800', textTransform: 'capitalize' }}>{transaction.status}</span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -1850,7 +1809,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                             <h3 style={{ margin: '0 0 12px', color: '#0F172A', fontSize: '16px' }}>Invoices</h3>
                             <div style={{ border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr .7fr', gap: '12px', padding: '11px 16px', background: '#F8FAFC', color: '#475569', fontSize: '12px', fontWeight: '800' }}><span>Invoice</span><span>Date</span><span>Download</span></div>
-                                {customerInvoices.length === 0 ? <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94A3B8', fontSize: '13px' }}>No invoices uploaded yet.</div> : customerInvoices.map((invoice) => <div key={invoice.id} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr .7fr', gap: '12px', padding: '12px 16px', borderTop: '1px solid #E2E8F0', alignItems: 'center', color: '#475569', fontSize: '13px' }}><strong>{invoice.invoice_number}</strong><span>{formatDate(invoice.created_at)}</span><button type="button" onClick={() => openUploadedInvoice(invoice)} style={{ width: 'fit-content', border: '1px solid rgba(73,168,216,.32)', background: 'rgba(73,168,216,.1)', color: '#2789B8', borderRadius: '6px', padding: '6px 9px', fontWeight: '800' }}>Download</button></div>)}
+                                {customerInvoices.length === 0 ? <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94A3B8', fontSize: '13px' }}>No invoices uploaded yet.</div> : <div style={{ maxHeight: '196px', overflowY: 'auto' }}>{customerInvoices.map((invoice) => <div key={invoice.id} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr .7fr', gap: '12px', minHeight: '49px', boxSizing: 'border-box', padding: '12px 16px', borderTop: '1px solid #E2E8F0', alignItems: 'center', color: '#475569', fontSize: '13px' }}><strong>{invoice.invoice_number}</strong><span>{formatDate(invoice.created_at)}</span><button type="button" onClick={() => openUploadedInvoice(invoice)} style={{ width: 'fit-content', border: '1px solid rgba(73,168,216,.32)', background: 'rgba(73,168,216,.1)', color: '#2789B8', borderRadius: '6px', padding: '6px 9px', fontWeight: '800' }}>Download</button></div>)}</div>}
                             </div>
                         </section>
 
@@ -1861,11 +1820,11 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                     <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 1fr 1.5fr 0.7fr 0.8fr', gap: '14px', padding: '11px 16px', background: '#F8FAFC', color: '#475569', fontSize: '12px', fontWeight: '800' }}>
                                         <span>Date & Time</span><span>Reference</span><span>Plan</span><span>Description</span><span>Change</span><span>Balance</span>
                                     </div>
-                                    {loadingTransactions ? <div style={{ padding: '24px 16px', textAlign: 'center', color: '#64748B', fontSize: '13px' }}>Loading usage...</div> : clearanceUsage.length === 0 ? <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94A3B8', fontSize: '13px' }}>No clearance usage recorded yet.</div> : clearanceUsage.map((entry) => (
-                                        <div key={entry.id} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 1fr 1.5fr 0.7fr 0.8fr', gap: '14px', padding: '12px 16px', borderTop: '1px solid #E2E8F0', alignItems: 'center', color: '#475569', fontSize: '12px' }}>
+                                    {loadingTransactions ? <div style={{ padding: '24px 16px', textAlign: 'center', color: '#64748B', fontSize: '13px' }}>Loading usage...</div> : clearanceUsage.length === 0 ? <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94A3B8', fontSize: '13px' }}>No clearance usage recorded yet.</div> : <div style={{ maxHeight: '196px', overflowY: 'auto' }}>{clearanceUsage.map((entry) => (
+                                        <div key={entry.id} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 1fr 1.5fr 0.7fr 0.8fr', gap: '14px', minHeight: '49px', boxSizing: 'border-box', padding: '12px 16px', borderTop: '1px solid #E2E8F0', alignItems: 'center', color: '#475569', fontSize: '12px' }}>
                                             <span>{formatDateTimeIST(entry.created_at)}</span><strong style={{ color: '#0F172A' }}>{entry.reference_id || '-'}</strong><span style={{ textTransform: 'capitalize' }}>{entry.plan_type || '-'}</span><span>{entry.reason || 'Clearance used'}</span><strong style={{ color: entry.amount < 0 ? '#B91C1C' : '#15803D' }}>{entry.amount > 0 ? '+' : ''}{entry.amount}</strong><strong>{entry.balance_after ?? '-'}</strong>
                                         </div>
-                                    ))}
+                                    ))}</div>}
                                 </div>
                             </div>
                         </section>

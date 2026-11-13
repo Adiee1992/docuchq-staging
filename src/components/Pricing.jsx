@@ -6,7 +6,7 @@ export default function Pricing() {
         <section className="pricing-section" id="pricing">
             <div className="pricing-header">
                 <h2>Simple, transparent pricing built to scale</h2>
-                <p>Choose the plan that fits your monthly export shipment volume</p>
+                <p>Choose the clearance option that fits your export shipment volume</p>
             </div>
 
             <div className="pricing-grid">

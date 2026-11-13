@@ -41,7 +41,7 @@ function DashboardPreview() {
                     <strong><span>Docu</span>CHQ</strong>
                 </div>
                 <div className="preview-account-bar">
-                    <span>12 Days Left</span><span>◷ &nbsp;Trial Account</span><span>₹ &nbsp;Clearances: 1</span><b>M</b>
+                    <span>₹ &nbsp;Clearances: 1</span><b>M</b>
                 </div>
             </div>
             <div className="preview-content">
