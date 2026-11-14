@@ -33,7 +33,7 @@ export default function InternalDocumentModal({ document, profile, mode, verifie
     const [comments, setComments] = useState([]);
     const [statusHistory, setStatusHistory] = useState([]);
     const [commentText, setCommentText] = useState('');
-    const [isInternalComment, setIsInternalComment] = useState(true);
+    const [isInternalComment, setIsInternalComment] = useState(false);
     const [statusReason, setStatusReason] = useState('');
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -176,6 +176,7 @@ export default function InternalDocumentModal({ document, profile, mode, verifie
 
         setComments((current) => [...current, data]);
         setCommentText('');
+        setIsInternalComment(false);
     };
 
     const updateStatus = async (newStatus) => {
@@ -395,6 +396,11 @@ export default function InternalDocumentModal({ document, profile, mode, verifie
                             />
                             Internal note only
                         </label>
+                        {isInternalComment && (
+                            <p style={{ margin: '7px 0 0', color: '#A16207', fontSize: '11px', lineHeight: 1.45 }}>
+                                Internal notes are hidden from the exporter and do not create an exporter notification highlight.
+                            </p>
+                        )}
                         <button type="submit" disabled={submitting || !commentText.trim()} style={{ marginTop: '10px', width: '100%', border: 'none', borderRadius: '8px', background: '#49A8D8', color: '#FFFFFF', padding: '10px 14px', fontWeight: '800', cursor: submitting || !commentText.trim() ? 'not-allowed' : 'pointer', opacity: submitting || !commentText.trim() ? 0.7 : 1 }}>
                             Add Comment
                         </button>
