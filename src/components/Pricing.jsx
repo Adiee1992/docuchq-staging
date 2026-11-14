@@ -20,6 +20,7 @@ export default function Pricing() {
                             <span className="price-amt">{plan.price}</span>
                             <span className="price-period">{plan.period}</span>
                         </div>
+                        <p style={{ margin: '-12px 0 18px', color: '#64748B', fontSize: '11px', fontWeight: '700' }}>{plan.taxNote}</p>
 
                         <Link to="/signup" className={`pricing-btn ${plan.popular ? 'btn-filled' : 'btn-outline'}`}>
                             {plan.cta}

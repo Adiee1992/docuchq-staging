@@ -1754,6 +1754,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                         <div style={{ marginBottom: '16px' }}>
                                             <strong style={{ color: '#0F172A', fontSize: '24px' }}>{plan.price}</strong>
                                             <span style={{ color: '#64748B', fontSize: '11px' }}>{plan.period}</span>
+                                            <span style={{ display: 'block', marginTop: '3px', color: '#64748B', fontSize: '11px', fontWeight: '700' }}>{plan.taxNote}</span>
                                         </div>
                                         <ul style={{ display: 'grid', gap: '8px', listStyle: 'none', padding: 0, margin: 0, color: '#475569', fontSize: '12px' }}>
                                             {plan.features.map((feature) => (
