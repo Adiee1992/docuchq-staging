@@ -1585,6 +1585,7 @@ input {
     color: #0F172A;
     font-size: 20px;
     line-height: 1.35;
+    font-variant-ligatures: none;
 }
 
 .guide-step-summary {
