@@ -2136,48 +2136,30 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                     }}
                     style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.68)', zIndex: 720, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
                 >
-                    <div style={{ width: 'min(820px, calc(100vw - 48px))', maxHeight: '92vh', overflowY: 'auto', background: '#FFFFFF', borderRadius: '8px', padding: '28px 30px', boxSizing: 'border-box', boxShadow: '0 24px 60px rgba(15,23,42,0.28)', fontFamily: 'inherit' }}>
+                    <div style={{ width: 'min(620px, calc(100vw - 48px))', maxHeight: '92vh', overflowY: 'auto', background: '#FFFFFF', borderRadius: '8px', padding: '28px 30px', boxSizing: 'border-box', boxShadow: '0 24px 60px rgba(15,23,42,0.28)', fontFamily: 'inherit' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: '22px' }}>
                             <div>
                                 <h2 id="payment-instructions-title" style={{ margin: '0 0 6px', color: '#0F172A', fontSize: '22px' }}>Payment Instructions</h2>
-                                <p style={{ margin: 0, color: '#64748B', fontSize: '13px' }}>Use either bank transfer or UPI to complete the payment.</p>
+                                <p style={{ margin: 0, color: '#64748B', fontSize: '13px' }}>Use the bank details below to complete the payment.</p>
                             </div>
                             <button type="button" aria-label="Close payment instructions" onClick={() => setPaymentInstructionsOpen(false)} style={modalCloseButtonStyle}>&times;</button>
                         </div>
 
-                        <div style={{ padding: '9px 12px', marginBottom: '20px', border: '1px solid #FDE68A', borderRadius: '6px', background: '#FFFBEB', color: '#92400E', fontSize: '12px', fontWeight: '700' }}>
-                            Placeholder payment details for layout preview only. Do not transfer funds using these details.
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>
+                        <div style={{ border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>
                             <section style={{ padding: '22px', background: '#FFFFFF' }}>
                                 <h3 style={{ margin: '0 0 18px', color: '#0F172A', fontSize: '16px' }}>Bank Transfer</h3>
                                 {[
-                                    ['Beneficiary Name', 'DocuCHQ Services LLP'],
-                                    ['Account Number', '000000000000'],
-                                    ['IFSC', 'ABCD0000123'],
-                                    ['Account Type', 'Current Account']
+                                    ['Account Name', 'DOCUCHQ SOLUTIONS LLP'],
+                                    ['Bank Name', 'AXIS BANK'],
+                                    ['Account Number', '926020034219141'],
+                                    ['Type', 'Current Account'],
+                                    ['IFSC Code', 'UTIB0001344']
                                 ].map(([label, value]) => (
                                     <div key={label} style={{ padding: '11px 0', borderTop: '1px solid #EEF2F7' }}>
                                         <p style={{ margin: '0 0 4px', color: '#64748B', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>{label}</p>
                                         <p style={{ margin: 0, color: '#0F172A', fontSize: '14px', fontWeight: '700', overflowWrap: 'anywhere' }}>{value}</p>
                                     </div>
                                 ))}
-                            </section>
-
-                            <section style={{ padding: '22px', background: '#F8FAFC', borderLeft: '1px solid #E2E8F0', textAlign: 'center' }}>
-                                <h3 style={{ margin: '0 0 8px', color: '#0F172A', fontSize: '16px' }}>UPI Payment</h3>
-                                <p style={{ margin: '0 0 16px', color: '#475569', fontSize: '14px', fontWeight: '800' }}>docuchq@placeholder</p>
-                                <div aria-label="Placeholder QR code" style={{ width: '184px', height: '184px', margin: '0 auto', padding: '12px', boxSizing: 'border-box', border: '1px solid #CBD5E1', background: '#FFFFFF', display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gridTemplateRows: 'repeat(9, 1fr)', gap: '2px' }}>
-                                    {Array.from({ length: 81 }, (_, index) => {
-                                        const row = Math.floor(index / 9);
-                                        const column = index % 9;
-                                        const finder = (row < 3 && column < 3) || (row < 3 && column > 5) || (row > 5 && column < 3);
-                                        const pattern = (index * 7 + row * 3 + column) % 5 < 2;
-                                        return <span key={index} style={{ background: finder || pattern ? '#0F172A' : '#FFFFFF' }} />;
-                                    })}
-                                </div>
-                                <p style={{ margin: '12px 0 0', color: '#94A3B8', fontSize: '11px', fontWeight: '700' }}>QR CODE PLACEHOLDER</p>
                             </section>
                         </div>
 
