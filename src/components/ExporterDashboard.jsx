@@ -1469,9 +1469,14 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                     <p className="user-name" style={{ margin: '0 0 4px 0', fontWeight: 'bold', color: '#0F172A', fontSize: '14px' }}>
                                         {userProfile?.first_name || 'Exporter'} {userProfile?.last_name || 'User'}
                                     </p>
-                                    <p className="user-company" style={{ margin: '0 0 12px 0', color: '#64748B', fontSize: '12px' }}>
+                                    <p className="user-company" style={{ margin: '0 0 4px 0', color: '#64748B', fontSize: '12px' }}>
                                         {userProfile?.company_name || 'Global Trade Inc.'}
                                     </p>
+                                    {userProfile?.account_number && (
+                                        <p style={{ margin: '0 0 12px 0', color: '#2789B8', fontSize: '11px', fontWeight: '800', letterSpacing: '0.02em' }}>
+                                            Customer ID: {userProfile.account_number}
+                                        </p>
+                                    )}
                                 </div>
                                 <hr style={{ border: 'none', borderTop: '1px solid #E2E8F0', margin: '8px 0' }} />
                                 <button
