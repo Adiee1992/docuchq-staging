@@ -39,6 +39,7 @@ export default function InternalDocumentModal({ document, profile, mode, verifie
     const [submitting, setSubmitting] = useState(false);
     const [formattedVersions, setFormattedVersions] = useState([]);
     const [uploadingFormatted, setUploadingFormatted] = useState(false);
+    const [previewingFile, setPreviewingFile] = useState(document);
 
     useEffect(() => {
         const loadModalData = async () => {
@@ -66,6 +67,7 @@ export default function InternalDocumentModal({ document, profile, mode, verifie
             if (signedUrlResult.error) {
                 showToast(signedUrlResult.error.message, 'error');
             } else {
+                setPreviewingFile(document);
                 setPreviewUrl(signedUrlResult.signedUrl);
             }
 
@@ -92,11 +94,31 @@ export default function InternalDocumentModal({ document, profile, mode, verifie
     const openVersionPreview = async (version) => {
         setLoading(true);
         try {
-            setPreviewUrl(await createDocumentSignedUrl(supabase, version));
+            const signedUrl = await createDocumentSignedUrl(supabase, version);
+            setPreviewingFile(version);
+            setPreviewUrl(signedUrl);
         } catch (error) {
             showToast(error.message, 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const downloadVersion = async (version) => {
+        try {
+            const signedUrl = await createDocumentSignedUrl(supabase, version);
+            const response = await fetch(signedUrl);
+            if (!response.ok) throw new Error('The document could not be downloaded.');
+            const blobUrl = URL.createObjectURL(await response.blob());
+            const link = window.document.createElement('a');
+            link.href = blobUrl;
+            link.download = version.file_name || 'document';
+            window.document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            showToast(error.message, 'error');
         }
     };
 
@@ -265,11 +287,22 @@ export default function InternalDocumentModal({ document, profile, mode, verifie
                         <button onClick={onClose} style={{ border: '1px solid #E2E8F0', background: '#fff', borderRadius: '6px', cursor: 'pointer', padding: '7px 10px', fontWeight: '700', color: '#334155' }}>Close</button>
                     </div>
 
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap' }}>
+                        <button type="button" onClick={() => openVersionPreview(document)} style={{ border: '1px solid rgba(73,168,216,.35)', background: previewingFile?.id === document.id ? 'rgba(73,168,216,.18)' : '#FFFFFF', color: '#2789B8', borderRadius: '6px', padding: '7px 10px', fontWeight: '800', cursor: 'pointer', fontSize: '12px' }}>Original</button>
+                        {formattedVersions.length > 0 && <button type="button" onClick={() => openVersionPreview(formattedVersions[0])} style={{ border: '1px solid rgba(73,168,216,.35)', background: previewingFile?.id === formattedVersions[0].id ? 'rgba(73,168,216,.18)' : '#FFFFFF', color: '#2789B8', borderRadius: '6px', padding: '7px 10px', fontWeight: '800', cursor: 'pointer', fontSize: '12px' }}>Formatted</button>}
+                    </div>
+
                     <DocumentPreviewViewer
                         loading={loading}
                         previewUrl={previewUrl}
-                        mimeType={document.mime_type}
-                        title={document.title}
+                        mimeType={previewingFile?.mime_type || document.mime_type}
+                        title={previewingFile?.file_name || document.title}
+                        toolbarAction={previewingFile && (
+                            <button type="button" onClick={() => downloadVersion(previewingFile)} style={{ border: '1px solid rgba(73,168,216,.35)', background: '#FFFFFF', color: '#2789B8', borderRadius: '6px', minHeight: '30px', padding: '5px 9px', fontWeight: '800', cursor: 'pointer', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg>
+                                Download {previewingFile.id === document.id ? 'Original' : 'Formatted'}
+                            </button>
+                        )}
                     />
                 </div>
 
@@ -280,10 +313,6 @@ export default function InternalDocumentModal({ document, profile, mode, verifie
                             <input type="file" disabled={uploadingFormatted} onChange={uploadFormattedVersion} style={{ display: 'none' }} />
                             {uploadingFormatted ? 'Uploading...' : 'Upload Formatted Document'}
                         </label>
-                        <div style={{ display: 'grid', gridTemplateColumns: formattedVersions.length > 0 ? '1fr 1fr' : '1fr', gap: '8px', marginTop: '8px' }}>
-                            <button type="button" onClick={() => openVersionPreview(document)} style={{ border: '1px solid rgba(73,168,216,.35)', background: '#FFFFFF', color: '#2789B8', borderRadius: '6px', padding: '8px', fontWeight: '800', cursor: 'pointer', fontSize: '12px' }}>View Original</button>
-                            {formattedVersions.length > 0 && <button type="button" onClick={() => openVersionPreview(formattedVersions[0])} style={{ border: '1px solid rgba(73,168,216,.35)', background: '#FFFFFF', color: '#2789B8', borderRadius: '6px', padding: '8px', fontWeight: '800', cursor: 'pointer', fontSize: '12px' }}>View Formatted</button>}
-                        </div>
                     </div>
                     <textarea
                         value={statusReason}
@@ -312,7 +341,7 @@ export default function InternalDocumentModal({ document, profile, mode, verifie
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '18px' }}>
                         <button disabled={submitting} onClick={() => updateStatus('needs_info')} style={{ border: 'none', background: '#FEF3C7', color: '#92400E', borderRadius: '8px', padding: '9px', fontWeight: '800', cursor: 'pointer' }}>Needs Info</button>
                         <button disabled={submitting} onClick={() => updateStatus('approved')} style={{ border: 'none', background: '#DCFCE7', color: '#166534', borderRadius: '8px', padding: '9px', fontWeight: '800', cursor: 'pointer' }}>Mark Compliant</button>
-                        <button disabled={submitting} onClick={() => updateStatus('clearance_issue')} style={{ border: 'none', background: '#FEE2E2', color: '#991B1B', borderRadius: '8px', padding: '9px', fontWeight: '800', cursor: 'pointer' }}>Issue</button>
+                        <button disabled={submitting} onClick={() => updateStatus('clearance_issue')} style={{ border: 'none', background: '#FEE2E2', color: '#991B1B', borderRadius: '8px', padding: '9px', fontWeight: '800', cursor: 'pointer' }}>Need Help</button>
                         <button disabled={submitting || mode !== 'verifier'} onClick={escalateToManager} style={{ border: mode === 'verifier' ? '1px solid #F87171' : '1px solid #E2E8F0', background: mode === 'verifier' ? '#DC2626' : '#F8FAFC', color: mode === 'verifier' ? '#FFFFFF' : '#94A3B8', borderRadius: '8px', padding: '9px', fontWeight: '800', cursor: mode === 'verifier' ? 'pointer' : 'not-allowed' }}>Escalate</button>
                     </div>
 

@@ -12,7 +12,7 @@ const statusMeta = {
     pending_review: { label: 'Pending Review', color: '#49A8D8', background: 'rgba(29, 78, 216, 0.1)' },
     needs_info: { label: 'Needs Info', color: '#A16207', background: 'rgba(161, 98, 7, 0.1)' },
     approved: { label: 'Compliant', color: '#15803D', background: 'rgba(21, 128, 61, 0.1)' },
-    clearance_issue: { label: 'Clearance Issue', color: '#B91C1C', background: 'rgba(185, 28, 28, 0.1)' },
+    clearance_issue: { label: 'Need Help', color: '#B91C1C', background: 'rgba(185, 28, 28, 0.1)' },
     rejected: { label: 'Rejected', color: '#64748B', background: '#F1F5F9' },
     cancelled: { label: 'Cancelled', color: '#64748B', background: '#F1F5F9' }
 };
@@ -111,9 +111,20 @@ function MetricIcon({ color, type }) {
     );
 }
 
-const trackTableColumns = '44px minmax(150px, 1.3fr) minmax(120px, 1fr) minmax(110px, 0.9fr) minmax(145px, 0.95fr) minmax(190px, 1.1fr) minmax(95px, 0.8fr) minmax(120px, 0.9fr) minmax(105px, 0.8fr) minmax(145px, 0.95fr) 120px 140px 260px';
-const trackTableMinWidth = 1860;
-const trackScrollableWidth = 1458;
+const trackTableColumns = '44px minmax(150px, 1.3fr) minmax(120px, 1fr) minmax(150px, 1.05fr) minmax(105px, 0.8fr) minmax(110px, 0.9fr) minmax(145px, 0.95fr) minmax(190px, 1.1fr) minmax(95px, 0.8fr) minmax(120px, 0.9fr) minmax(105px, 0.8fr) minmax(145px, 0.95fr) 120px 140px 260px';
+const trackTableMinWidth = 2139;
+const trackScrollableWidth = 1727;
+const customerDataColumns = '110px minmax(135px, 1.05fr) minmax(145px, 1.15fr) minmax(210px, 1.4fr) 135px 145px 130px 120px 165px';
+const stickyExpandStyle = {
+    position: 'sticky',
+    left: 0,
+    zIndex: 4,
+    background: '#FFFFFF',
+    boxShadow: '12px 0 0 #FFFFFF',
+    minHeight: '44px',
+    display: 'flex',
+    alignItems: 'center'
+};
 const stickyActionStyle = {
     position: 'sticky',
     right: 0,
@@ -139,6 +150,12 @@ const stickyHeaderActionStyle = {
     zIndex: 5,
     background: '#F8FAFC',
     boxShadow: '-12px 0 0 #F8FAFC'
+};
+const stickyHeaderExpandStyle = {
+    ...stickyExpandStyle,
+    zIndex: 5,
+    background: '#F8FAFC',
+    boxShadow: '12px 0 0 #F8FAFC'
 };
 const stickyHeaderStatusStyle = {
     ...stickyStatusStyle,
@@ -265,7 +282,7 @@ export default function ManagerDashboard({ profile, onLogout }) {
         ] = await Promise.all([
             supabase.from('documents').select('*').order('submitted_at', { ascending: false }),
             supabase.from('clearance_tracks').select('id, profile_id, reference_id, customer_name, destination_country, invoice_currency, ad_bank_name, payment_method, created_at, updated_at').order('created_at', { ascending: false }),
-            supabase.from('profiles').select('id, email, first_name, last_name, company_name, mobile_number, address, gstin, pan, account_status, role, available_clearances, created_at, updated_at, deletion_requested_at, deletion_scheduled_for').order('created_at', { ascending: false }),
+            supabase.from('profiles').select('id, account_number, email, first_name, last_name, company_name, mobile_number, address, gstin, pan, account_status, role, available_clearances, created_at, updated_at, deletion_requested_at, deletion_scheduled_for').order('created_at', { ascending: false }),
             supabase.from('sales_leads').select('id, full_name, company_name, email, mobile_number, comments, status, created_at, viewed_at').order('created_at', { ascending: false }),
             supabase.from('customer_issues').select('id, profile_id, full_name, company_name, email, mobile_number, comments, status, created_at, viewed_at').order('created_at', { ascending: false }),
             supabase.from('free_credit_grants').select('id, profile_id, credits, created_at').order('created_at', { ascending: false }),
@@ -419,7 +436,7 @@ export default function ManagerDashboard({ profile, onLogout }) {
                 || (activeTab === 'Pending Review' && track.status === 'pending_review')
                 || (activeTab === 'Needs Info' && track.status === 'needs_info')
                 || (activeTab === 'Compliant' && track.status === 'approved')
-                || (activeTab === 'Clearance Issue' && track.status === 'clearance_issue')
+                || (activeTab === 'Need Help' && track.status === 'clearance_issue')
                 || (activeTab === 'Escalated' && track.escalated);
             const matchesSearch = !query
                 || track.referenceId.toLowerCase().includes(query)
@@ -429,6 +446,9 @@ export default function ManagerDashboard({ profile, onLogout }) {
                 || track.adBankName.toLowerCase().includes(query)
                 || riskLabel.includes(query)
                 || tradeReviewLabel.includes(query)
+                || exporter?.first_name?.toLowerCase().includes(query)
+                || exporter?.last_name?.toLowerCase().includes(query)
+                || exporter?.account_number?.toLowerCase().includes(query)
                 || exporter?.company_name?.toLowerCase().includes(query)
                 || exporter?.email?.toLowerCase().includes(query)
                 || assignedVerifier?.first_name?.toLowerCase().includes(query)
@@ -449,7 +469,7 @@ export default function ManagerDashboard({ profile, onLogout }) {
         { label: 'Unassigned', value: dateFilteredTracks.filter((track) => track.unassigned).length, color: '#49A8D8', icon: 'unassigned' },
         { label: 'Pending Review', value: dateFilteredTracks.filter((track) => track.status === 'pending_review').length, color: '#49A8D8', icon: 'pending' },
         { label: 'Needs Info', value: dateFilteredTracks.filter((track) => track.status === 'needs_info').length, color: '#A16207', icon: 'info' },
-        { label: 'Clearance Issue', value: dateFilteredTracks.filter((track) => track.status === 'clearance_issue').length, color: '#B91C1C', icon: 'issue' },
+        { label: 'Need Help', value: dateFilteredTracks.filter((track) => track.status === 'clearance_issue').length, color: '#B91C1C', icon: 'issue' },
         { label: 'Escalated', value: dateFilteredTracks.filter((track) => track.escalated).length, color: '#B91C1C', icon: 'escalated' },
         { label: 'Compliant', value: dateFilteredTracks.filter((track) => track.status === 'approved').length, color: '#15803D', icon: 'approved' }
     ];
@@ -867,7 +887,7 @@ export default function ManagerDashboard({ profile, onLogout }) {
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #E2E8F0', paddingBottom: '12px', gap: '16px' }}>
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            {['All', 'Unassigned', 'Pending Review', 'Needs Info', 'Compliant', 'Clearance Issue', 'Escalated'].map((tab) => (
+                            {['All', 'Unassigned', 'Pending Review', 'Needs Info', 'Compliant', 'Need Help', 'Escalated'].map((tab) => (
                                 <button key={tab} onClick={() => setActiveTab(tab)} style={{ border: 'none', borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', fontWeight: '700', background: activeTab === tab ? '#49A8D8' : 'transparent', color: activeTab === tab ? '#FFFFFF' : '#64748B' }}>{tab}</button>
                             ))}
                         </div>
@@ -881,8 +901,8 @@ export default function ManagerDashboard({ profile, onLogout }) {
                         <div ref={tableScrollRef} className="hide-horizontal-scrollbar" onScroll={syncMainTableScroll} style={{ overflowX: 'auto', overflowY: 'hidden' }}>
                             <div style={{ minWidth: `${trackTableMinWidth}px` }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: trackTableColumns, gap: '12px', padding: '14px 20px', background: '#F8FAFC', color: '#475569', fontSize: '13px', fontWeight: '800' }}>
-                                    {['', 'Reference Track', 'Customer', 'Country', 'Risk', 'Trade Review', 'Currency', 'Payment Method', 'AD Bank', 'Assigned To', 'Submitted', 'Status', 'Action'].map((heading, index) => (
-                                        <span key={heading} style={{ display: 'flex', alignItems: 'center', whiteSpace: heading === 'Payment Method' ? 'normal' : 'nowrap', ...(index === 11 ? stickyHeaderStatusStyle : {}), ...(index === 12 ? stickyHeaderActionStyle : {}) }}>{heading}</span>
+                                    {['', 'Reference Track', 'Buyer', 'Exporter', 'User ID', 'Country', 'Risk', 'Trade Review', 'Currency', 'Payment Method', 'AD Bank', 'Assigned To', 'Submitted', 'Status', 'Action'].map((heading, index) => (
+                                        <span key={heading} style={{ display: 'flex', alignItems: 'center', whiteSpace: heading === 'Payment Method' ? 'normal' : 'nowrap', ...(index === 0 ? stickyHeaderExpandStyle : {}), ...(index === 13 ? stickyHeaderStatusStyle : {}), ...(index === 14 ? stickyHeaderActionStyle : {}) }}>{heading}</span>
                                     ))}
                                 </div>
 
@@ -893,6 +913,10 @@ export default function ManagerDashboard({ profile, onLogout }) {
                                 ) : filteredTracks.map((track) => {
                                     const meta = statusMeta[track.status] || statusMeta.pending_review;
                                     const collapsed = collapsedTracks[track.trackKey] !== false;
+                                    const exporter = profileById.get(track.profileId);
+                                    const exporterName = exporter
+                                        ? `${exporter.first_name || ''} ${exporter.last_name || ''}`.trim() || exporter.company_name || exporter.email
+                                        : 'Unknown exporter';
                                     const assignedVerifier = profileById.get(track.assignedVerifierId);
                                     const assignedTo = track.hasMultipleVerifiers
                                         ? 'Multiple Verifiers'
@@ -903,12 +927,16 @@ export default function ManagerDashboard({ profile, onLogout }) {
                                     return (
                                         <React.Fragment key={track.trackKey}>
                                             <div style={{ display: 'grid', gridTemplateColumns: trackTableColumns, gap: '12px', padding: '14px 20px', borderTop: '1px solid #E2E8F0', alignItems: 'center' }}>
-                                                <button onClick={() => setCollapsedTracks((current) => ({ ...current, [track.trackKey]: !collapsed }))} style={{ border: 'none', background: '#F1F5F9', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', color: '#334155', fontWeight: '800' }}>{collapsed ? '+' : '-'}</button>
+                                                <div style={stickyExpandStyle}>
+                                                    <button onClick={() => setCollapsedTracks((current) => ({ ...current, [track.trackKey]: !collapsed }))} style={{ border: 'none', background: '#F1F5F9', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', color: '#334155', fontWeight: '800' }}>{collapsed ? '+' : '-'}</button>
+                                                </div>
                                                 <div>
                                                     <p style={{ margin: 0, color: '#0F172A', fontWeight: '800', fontSize: '14px' }}>{track.referenceId}</p>
                                                     <p style={{ margin: '4px 0 0 0', color: '#94A3B8', fontSize: '12px' }}>{track.documents.length} file{track.documents.length === 1 ? '' : 's'}</p>
                                                 </div>
                                                 <span style={{ color: '#475569', fontSize: '13px' }}>{track.customerName}</span>
+                                                <button type="button" disabled={!exporter} onClick={() => exporter && setSelectedCustomerId(exporter.id)} title={exporter ? `Open customer data for ${exporterName}` : undefined} style={{ width: 'fit-content', border: 'none', padding: 0, background: 'transparent', color: exporter ? '#2789B8' : '#475569', fontFamily: 'inherit', fontSize: '13px', fontWeight: '800', textAlign: 'left', cursor: exporter ? 'pointer' : 'default' }}>{exporterName}</button>
+                                                <button type="button" disabled={!exporter} onClick={() => exporter && setSelectedCustomerId(exporter.id)} title={exporter ? `Open customer data for ${exporterName}` : undefined} style={{ width: 'fit-content', border: 'none', padding: 0, background: 'transparent', color: exporter ? '#2789B8' : '#475569', fontFamily: 'inherit', fontSize: '13px', fontWeight: '800', textAlign: 'left', whiteSpace: 'nowrap', cursor: exporter ? 'pointer' : 'default' }}>{exporter?.account_number || '-'}</button>
                                                 <span style={{ color: '#475569', fontSize: '13px' }}>{track.destinationCountry}</span>
                                                 <RiskBadge country={track.destinationCountry} />
                                                 <TradeReviewBadge country={track.destinationCountry} />
@@ -928,30 +956,40 @@ export default function ManagerDashboard({ profile, onLogout }) {
                                             </div>
 
                                             {!collapsed && (
-                                                <div style={{ background: '#FBFEFD', borderTop: '1px solid #E2E8F0', padding: '8px 20px 14px 64px' }}>
+                                                <div style={{ background: '#FBFEFD', borderTop: '1px solid #E2E8F0' }}>
                                                     {track.documents.length === 0 ? (
-                                                        <div style={{ padding: '14px 0', color: '#94A3B8', fontSize: '13px', fontWeight: '700' }}>No files added yet.</div>
+                                                        <div style={{ padding: '14px 20px 14px 76px', color: '#94A3B8', fontSize: '13px', fontWeight: '700' }}>No files added yet.</div>
                                                     ) : track.documents.map((document) => {
                                                         const documentMeta = statusMeta[document.status] || statusMeta.pending_review;
-                                                        const exporter = profileById.get(document.profile_id);
                                                         const verifier = profileById.get(document.assigned_verifier_id);
 
                                                         return (
-                                                            <div key={document.id} style={{ display: 'grid', gridTemplateColumns: '1.25fr 1.15fr .9fr .9fr 1.2fr .75fr', alignItems: 'center', gap: '12px', padding: '10px 0', borderTop: '1px solid #E2E8F0' }}>
+                                                            <div key={document.id} style={{ display: 'grid', gridTemplateColumns: trackTableColumns, alignItems: 'center', gap: '12px', padding: '10px 20px', borderTop: '1px solid #E2E8F0' }}>
+                                                                <div style={{ ...stickyExpandStyle, background: '#FBFEFD', boxShadow: '12px 0 0 #FBFEFD' }} />
                                                                 <div>
                                                                     <p style={{ margin: 0, color: '#0F172A', fontWeight: '800', fontSize: '13px', overflowWrap: 'anywhere' }}>{document.file_name}</p>
                                                                     <p style={{ margin: '4px 0 0 0', color: '#94A3B8', fontSize: '12px' }}>{formatBytes(document.file_size)}</p>
                                                                 </div>
-                                                                <select aria-label={`Document type for ${document.file_name}`} value={document.document_type || 'Other'} onChange={(event) => updateDocumentType(document.id, event.target.value)} style={{ width: '100%', height: '34px', border: '1px solid #CBD5E1', borderRadius: '6px', padding: '0 8px', color: '#334155', background: '#FFFFFF', fontSize: '12px' }}>
+                                                                <select aria-label={`Document type for ${document.file_name}`} value={document.document_type || 'Other'} onChange={(event) => updateDocumentType(document.id, event.target.value)} style={{ width: '170px', maxWidth: 'calc(100% + 50px)', height: '34px', border: '1px solid #CBD5E1', borderRadius: '6px', padding: '0 10px', color: '#334155', background: '#FFFFFF', fontSize: '12px' }}>
                                                                     {documentTypes.map((type) => <option key={type} value={type}>{type}</option>)}
                                                                 </select>
-                                                                <span style={{ color: '#475569', fontSize: '12px' }}>{exporter?.company_name || exporter?.email || '-'}</span>
+                                                                <span />
+                                                                <span />
+                                                                <span />
+                                                                <span />
+                                                                <span />
+                                                                <span />
+                                                                <span />
+                                                                <span />
                                                                 <span style={{ color: '#475569', fontSize: '12px' }}>{verifier ? `${verifier.first_name || 'Verifier'} ${verifier.last_name || ''}` : 'Unassigned'}</span>
-                                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-start' }}>
+                                                                <span style={{ color: '#475569', fontSize: '12px' }}>{formatDate(document.submitted_at)}</span>
+                                                                <div style={{ ...stickyStatusStyle, background: '#FBFEFD', boxShadow: '-12px 0 0 #FBFEFD, 12px 0 0 #FBFEFD' }}>
+                                                                    <span style={{ width: 'fit-content', borderRadius: '999px', padding: '5px 10px', fontSize: '12px', fontWeight: '800', color: document.escalated_to_manager && document.status !== 'approved' ? '#B91C1C' : documentMeta.color, background: document.escalated_to_manager && document.status !== 'approved' ? '#FEE2E2' : documentMeta.background, whiteSpace: 'nowrap' }}>{document.escalated_to_manager && document.status !== 'approved' ? 'Escalated' : documentMeta.label}</span>
+                                                                </div>
+                                                                <div style={{ ...stickyActionStyle, gap: '8px', background: '#FBFEFD', boxShadow: '-12px 0 0 #FBFEFD' }}>
                                                                     <button onClick={() => setSelectedDocument(document)} style={{ ...softBlueButtonStyle, padding: '7px 10px' }}>Review</button>
                                                                     <button onClick={() => openDeleteModal('document', document)} style={{ border: '1px solid #FECACA', background: '#FEF2F2', color: '#B91C1C', borderRadius: '6px', padding: '7px 10px', cursor: 'pointer', fontWeight: '800', fontSize: '12px' }}>Delete</button>
                                                                 </div>
-                                                                <span style={{ width: 'fit-content', borderRadius: '999px', padding: '5px 10px', fontSize: '12px', fontWeight: '800', color: document.escalated_to_manager && document.status !== 'approved' ? '#B91C1C' : documentMeta.color, background: document.escalated_to_manager && document.status !== 'approved' ? '#FEE2E2' : documentMeta.background }}>{document.escalated_to_manager && document.status !== 'approved' ? 'Escalated' : documentMeta.label}</span>
                                                             </div>
                                                         );
                                                     })}
@@ -976,7 +1014,7 @@ export default function ManagerDashboard({ profile, onLogout }) {
                     }}
                     style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.62)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
                 >
-                    <div style={{ width: 'min(960px, calc(100vw - 48px))', maxHeight: '88vh', background: '#FFFFFF', borderRadius: '8px', boxShadow: '0 24px 60px rgba(15,23,42,0.24)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ width: dataView === 'customers' ? 'min(1420px, calc(100vw - 48px))' : 'min(960px, calc(100vw - 48px))', maxHeight: '88vh', background: '#FFFFFF', borderRadius: '8px', boxShadow: '0 24px 60px rgba(15,23,42,0.24)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '22px 26px', borderBottom: '1px solid #E2E8F0' }}>
                             <div>
                                 <h2 id="manager-data-title" style={{ margin: '0 0 5px 0', color: '#0F172A', fontSize: '21px' }}>{dataView === 'usage' ? 'Clearance Logs' : dataView === 'issues' ? 'Issues' : dataView === 'leads' ? 'Leads' : dataView === 'verifiers' ? 'Verifier Data' : 'Customer Data'}</h2>
@@ -1068,13 +1106,14 @@ export default function ManagerDashboard({ profile, onLogout }) {
                                     ))}
                                 </div>
                             ) : (
-                                <div style={{ minWidth: '1240px', border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1.05fr 1.15fr 1.4fr 1fr 1fr 0.9fr 0.85fr 1fr', gap: '12px', padding: '12px 15px', background: '#F8FAFC', color: '#475569', fontSize: '12px', fontWeight: '800' }}>
+                                <div style={{ minWidth: '1340px', border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: customerDataColumns, gap: '12px', padding: '12px 15px', background: '#F8FAFC', color: '#475569', fontSize: '12px', fontWeight: '800', alignItems: 'center', textAlign: 'left' }}>
+                                        <span>User ID</span>
                                         <span>User Name</span>
                                         <span>Company</span>
                                         <span>Email</span>
                                         <span>Phone Number</span>
-                                        <span>Current Plan</span>
+                                        <span>Clearance Balance</span>
                                         <span>Activation Status</span>
                                         <span>Created</span>
                                         <span>Last Active</span>
@@ -1082,12 +1121,13 @@ export default function ManagerDashboard({ profile, onLogout }) {
                                     {customerData.length === 0 ? (
                                         <div style={{ padding: '36px 16px', textAlign: 'center', color: '#94A3B8', fontSize: '13px' }}>No customer accounts found.</div>
                                     ) : customerData.map((customer) => (
-                                        <button type="button" key={customer.id} onClick={() => setSelectedCustomerId(customer.id)} style={{ width: '100%', display: 'grid', gridTemplateColumns: '1.05fr 1.15fr 1.4fr 1fr 1fr 0.9fr 0.85fr 1fr', gap: '12px', padding: '13px 15px', border: 'none', borderTop: '1px solid #E2E8F0', alignItems: 'center', color: '#475569', fontSize: '13px', background: '#FFFFFF', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                        <button type="button" key={customer.id} onClick={() => setSelectedCustomerId(customer.id)} title={customer.available_clearances === 0 ? 'No clearances remaining — follow up with this customer' : undefined} style={{ width: '100%', display: 'grid', gridTemplateColumns: customerDataColumns, gap: '12px', padding: '13px 15px', border: 'none', borderTop: '1px solid #E2E8F0', alignItems: 'center', color: '#475569', fontSize: '13px', background: customer.available_clearances === 0 ? '#FFFBEB' : '#FFFFFF', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                            <strong style={{ color: '#2789B8', whiteSpace: 'nowrap' }}>{customer.account_number || '-'}</strong>
                                             <strong style={{ color: '#0F172A' }}>{`${customer.first_name || ''} ${customer.last_name || ''}`.trim() || 'Exporter'}</strong>
                                             <span>{customer.company_name || '-'}</span>
                                             <span>{customer.email || '-'}</span>
                                             <span>{customer.mobile_number || '-'}</span>
-                                            <strong style={{ color: customer.currentPlan?.status === 'active' ? '#15803D' : '#64748B', textTransform: 'capitalize' }}>{customer.currentPlan ? `${customer.currentPlan.plan_type} (${customer.currentPlan.status})` : 'View only'}</strong>
+                                            <strong style={{ color: customer.available_clearances === 0 ? '#A16207' : '#15803D' }}>{customer.available_clearances ?? 0}</strong>
                                             {(() => {
                                                 const status = customer.deletion_requested_at ? 'Deleted' : customer.account_status === 'inactive' ? 'Inactive' : 'Active';
                                                 const tone = status === 'Deleted' ? { color: '#B91C1C', background: '#FEE2E2' } : status === 'Inactive' ? { color: '#92400E', background: '#FEF3C7' } : { color: '#15803D', background: '#DCFCE7' };
