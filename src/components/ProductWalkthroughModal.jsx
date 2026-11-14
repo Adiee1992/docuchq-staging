@@ -31,7 +31,7 @@ function FileRow({ status, tone }) {
     );
 }
 
-function WalkthroughScreen({ scene }) {
+export function WalkthroughScreen({ scene }) {
     const complete = scene >= 5;
     return (
         <div className={`walkthrough-product walkthrough-scene-${scene}`}>

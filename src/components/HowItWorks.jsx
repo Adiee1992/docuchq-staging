@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { WalkthroughScreen } from './ProductWalkthroughModal';
 
 export const howItWorksSteps = [
     {
@@ -96,7 +97,7 @@ export default function HowItWorks({ onSignInClick }) {
                     </div>
 
                     <div className="guide-steps">
-                        {howItWorksSteps.map((step) => (
+                        {howItWorksSteps.map((step, index) => (
                             <article className="guide-step" key={step.number}>
                                 <div className="guide-step-marker">
                                     <span>{step.number}</span>
@@ -108,6 +109,9 @@ export default function HowItWorks({ onSignInClick }) {
                                     <ul>
                                         {step.details.map((detail) => <li key={detail}>{detail}</li>)}
                                     </ul>
+                                </div>
+                                <div className="guide-step-visual" aria-label={`${step.title} dashboard preview`}>
+                                    <WalkthroughScreen scene={[1, 2, 3, 5][index]} />
                                 </div>
                             </article>
                         ))}

@@ -13,7 +13,6 @@ import ManagerDashboard from './components/ManagerDashboard';
 import AuthConfirm from './components/AuthConfirm';
 import ResetPassword from './components/ResetPassword';
 import SalesLeadModal from './components/SalesLeadModal';
-import ProductWalkthroughModal from './components/ProductWalkthroughModal';
 import LegalAcceptanceGate from './components/LegalAcceptanceGate';
 import { supabase } from './supabaseClient';
 import { ensureProfile } from './utils/profile';
@@ -42,7 +41,6 @@ function getDashboardPath(role) {
 function AppContent() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [salesModalOpen, setSalesModalOpen] = useState(false);
-    const [walkthroughOpen, setWalkthroughOpen] = useState(false);
     const [session, setSession] = useState(null);
     const [profile, setProfile] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
@@ -136,7 +134,7 @@ function AppContent() {
                         path="/"
                         element={
                             <div className="home-page-shell">
-                                <Header onSignInClick={() => setIsModalOpen(true)} onHowItWorksClick={() => setWalkthroughOpen(true)} />
+                                <Header onSignInClick={() => setIsModalOpen(true)} />
                                 <HomeLanding onTalkToSales={() => setSalesModalOpen(true)} />
                             </div>
                         }
@@ -233,7 +231,6 @@ function AppContent() {
                 onSignInSuccess={handleSignInSuccess}
             />
             <SalesLeadModal isOpen={salesModalOpen} onClose={() => setSalesModalOpen(false)} />
-            <ProductWalkthroughModal open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} />
         </>
     );
 }
