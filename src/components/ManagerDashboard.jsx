@@ -5,6 +5,7 @@ import InternalDocumentModal from './InternalDocumentModal';
 import CustomerDetailModal from './CustomerDetailModal';
 import { getCountryRiskProfile, getTradeReviewProfile, RiskBadge, TradeReviewBadge } from '../utils/riskProfiles';
 import { documentTypes } from '../data/documentTypes';
+import { fetchUnreadDocumentIds, markDocumentActivityRead } from '../utils/documentActivity';
 import logoIcon from '../assets/Logo_Header-Trans.png';
 import logoFallback from '../assets/Logo_Header.JPG';
 
@@ -232,6 +233,7 @@ export default function ManagerDashboard({ profile, onLogout }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [collapsedTracks, setCollapsedTracks] = useState({});
     const [selectedDocument, setSelectedDocument] = useState(null);
+    const [unreadDocumentIds, setUnreadDocumentIds] = useState(() => new Set());
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deletePassword, setDeletePassword] = useState('');
     const [deleting, setDeleting] = useState(false);
@@ -326,6 +328,28 @@ export default function ManagerDashboard({ profile, onLogout }) {
 
         if (usageError) showToast(usageError.message, 'error');
         else setClearanceUsage(usageData || []);
+
+        try {
+            setUnreadDocumentIds(await fetchUnreadDocumentIds());
+        } catch (activityError) {
+            showToast(activityError.message, 'error');
+        }
+    };
+
+    const openDocumentReview = async (document) => {
+        setSelectedDocument(document);
+        if (!unreadDocumentIds.has(document.id)) return;
+        setUnreadDocumentIds((current) => {
+            const next = new Set(current);
+            next.delete(document.id);
+            return next;
+        });
+        try {
+            await markDocumentActivityRead(document.id);
+        } catch (error) {
+            showToast(error.message, 'error');
+            setUnreadDocumentIds((current) => new Set(current).add(document.id));
+        }
     };
 
     useEffect(() => {
@@ -923,11 +947,13 @@ export default function ManagerDashboard({ profile, onLogout }) {
                                         : assignedVerifier
                                             ? `${assignedVerifier.first_name || ''} ${assignedVerifier.last_name || ''}`.trim() || assignedVerifier.email
                                             : 'Unassigned';
+                                    const trackHasUnreadActivity = track.documents.some((document) => unreadDocumentIds.has(document.id));
+                                    const trackBackground = trackHasUnreadActivity ? '#FFFBEB' : '#FFFFFF';
 
                                     return (
                                         <React.Fragment key={track.trackKey}>
-                                            <div style={{ display: 'grid', gridTemplateColumns: trackTableColumns, gap: '12px', padding: '14px 20px', borderTop: '1px solid #E2E8F0', alignItems: 'center' }}>
-                                                <div style={stickyExpandStyle}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: trackTableColumns, gap: '12px', padding: '14px 20px', borderTop: '1px solid #E2E8F0', alignItems: 'center', background: trackBackground }}>
+                                                <div style={{ ...stickyExpandStyle, background: trackBackground, boxShadow: `12px 0 0 ${trackBackground}` }}>
                                                     <button onClick={() => setCollapsedTracks((current) => ({ ...current, [track.trackKey]: !collapsed }))} style={{ border: 'none', background: '#F1F5F9', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', color: '#334155', fontWeight: '800' }}>{collapsed ? '+' : '-'}</button>
                                                 </div>
                                                 <div>
@@ -945,10 +971,10 @@ export default function ManagerDashboard({ profile, onLogout }) {
                                                 <span style={{ color: '#475569', fontSize: '13px' }}>{track.adBankName}</span>
                                                 <span style={{ color: assignedVerifier ? '#475569' : '#A16207', fontSize: '13px', fontWeight: '700' }}>{assignedTo}</span>
                                                 <span style={{ color: '#475569', fontSize: '13px' }}>{formatDate(track.submittedAt)}</span>
-                                                <div style={stickyStatusStyle}>
+                                                <div style={{ ...stickyStatusStyle, background: trackBackground, boxShadow: `-12px 0 0 ${trackBackground}, 12px 0 0 ${trackBackground}` }}>
                                                     <span style={{ width: 'fit-content', borderRadius: '999px', padding: '5px 10px', fontSize: '12px', fontWeight: '800', color: track.escalated ? '#B91C1C' : meta.color, background: track.escalated ? '#FEE2E2' : meta.background, whiteSpace: 'nowrap' }}>{track.escalated ? 'Escalated' : meta.label}</span>
                                                 </div>
-                                                <div style={{ ...stickyActionStyle, gap: '7px' }}>
+                                                <div style={{ ...stickyActionStyle, gap: '7px', background: trackBackground, boxShadow: `-12px 0 0 ${trackBackground}` }}>
                                                     <button onClick={() => setCollapsedTracks((current) => ({ ...current, [track.trackKey]: false }))} style={{ ...softBlueButtonStyle, width: 'fit-content', padding: '7px 10px' }}>View Files</button>
                                                     <button onClick={() => openReassignModal(track)} style={{ ...softBlueButtonStyle, width: 'fit-content', padding: '7px 10px' }}>Reassign</button>
                                                     <button onClick={() => openDeleteModal('track', track)} style={{ border: '1px solid #FECACA', background: '#FEF2F2', color: '#B91C1C', borderRadius: '6px', padding: '7px 10px', cursor: 'pointer', fontWeight: '800', fontSize: '12px' }}>Delete</button>
@@ -962,10 +988,12 @@ export default function ManagerDashboard({ profile, onLogout }) {
                                                     ) : track.documents.map((document) => {
                                                         const documentMeta = statusMeta[document.status] || statusMeta.pending_review;
                                                         const verifier = profileById.get(document.assigned_verifier_id);
+                                                        const documentHasUnreadActivity = unreadDocumentIds.has(document.id);
+                                                        const documentBackground = documentHasUnreadActivity ? '#FFFBEB' : '#FBFEFD';
 
                                                         return (
-                                                            <div key={document.id} style={{ display: 'grid', gridTemplateColumns: trackTableColumns, alignItems: 'center', gap: '12px', padding: '10px 20px', borderTop: '1px solid #E2E8F0' }}>
-                                                                <div style={{ ...stickyExpandStyle, background: '#FBFEFD', boxShadow: '12px 0 0 #FBFEFD' }} />
+                                                            <div key={document.id} style={{ display: 'grid', gridTemplateColumns: trackTableColumns, alignItems: 'center', gap: '12px', padding: '10px 20px', borderTop: '1px solid #E2E8F0', background: documentBackground }}>
+                                                                <div style={{ ...stickyExpandStyle, background: documentBackground, boxShadow: `12px 0 0 ${documentBackground}` }} />
                                                                 <div>
                                                                     <p style={{ margin: 0, color: '#0F172A', fontWeight: '800', fontSize: '13px', overflowWrap: 'anywhere' }}>{document.file_name}</p>
                                                                     <p style={{ margin: '4px 0 0 0', color: '#94A3B8', fontSize: '12px' }}>{formatBytes(document.file_size)}</p>
@@ -983,11 +1011,11 @@ export default function ManagerDashboard({ profile, onLogout }) {
                                                                 <span />
                                                                 <span style={{ color: '#475569', fontSize: '12px' }}>{verifier ? `${verifier.first_name || 'Verifier'} ${verifier.last_name || ''}` : 'Unassigned'}</span>
                                                                 <span style={{ color: '#475569', fontSize: '12px' }}>{formatDate(document.submitted_at)}</span>
-                                                                <div style={{ ...stickyStatusStyle, background: '#FBFEFD', boxShadow: '-12px 0 0 #FBFEFD, 12px 0 0 #FBFEFD' }}>
+                                                                <div style={{ ...stickyStatusStyle, background: documentBackground, boxShadow: `-12px 0 0 ${documentBackground}, 12px 0 0 ${documentBackground}` }}>
                                                                     <span style={{ width: 'fit-content', borderRadius: '999px', padding: '5px 10px', fontSize: '12px', fontWeight: '800', color: document.escalated_to_manager && document.status !== 'approved' ? '#B91C1C' : documentMeta.color, background: document.escalated_to_manager && document.status !== 'approved' ? '#FEE2E2' : documentMeta.background, whiteSpace: 'nowrap' }}>{document.escalated_to_manager && document.status !== 'approved' ? 'Escalated' : documentMeta.label}</span>
                                                                 </div>
-                                                                <div style={{ ...stickyActionStyle, gap: '8px', background: '#FBFEFD', boxShadow: '-12px 0 0 #FBFEFD' }}>
-                                                                    <button onClick={() => setSelectedDocument(document)} style={{ ...softBlueButtonStyle, padding: '7px 10px' }}>Review</button>
+                                                                <div style={{ ...stickyActionStyle, gap: '8px', background: documentBackground, boxShadow: `-12px 0 0 ${documentBackground}` }}>
+                                                                    <button onClick={() => openDocumentReview(document)} style={{ ...softBlueButtonStyle, padding: '7px 10px' }}>Review</button>
                                                                     <button onClick={() => openDeleteModal('document', document)} style={{ border: '1px solid #FECACA', background: '#FEF2F2', color: '#B91C1C', borderRadius: '6px', padding: '7px 10px', cursor: 'pointer', fontWeight: '800', fontSize: '12px' }}>Delete</button>
                                                                 </div>
                                                             </div>

@@ -4,6 +4,7 @@ import { useToast } from '../context/ToastContext';
 import InternalDocumentModal from './InternalDocumentModal';
 import { getCountryRiskProfile, getTradeReviewProfile, RiskBadge, TradeReviewBadge } from '../utils/riskProfiles';
 import { documentTypes } from '../data/documentTypes';
+import { fetchUnreadDocumentIds, markDocumentActivityRead } from '../utils/documentActivity';
 import logoIcon from '../assets/Logo_Header-Trans.png';
 import logoFallback from '../assets/Logo_Header.JPG';
 
@@ -203,6 +204,7 @@ export default function VerifierDashboard({ profile, onLogout }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [collapsedTracks, setCollapsedTracks] = useState({});
     const [selectedDocument, setSelectedDocument] = useState(null);
+    const [unreadDocumentIds, setUnreadDocumentIds] = useState(() => new Set());
     const [queryDiagnostics, setQueryDiagnostics] = useState({
         count: 0,
         error: '',
@@ -248,6 +250,27 @@ export default function VerifierDashboard({ profile, onLogout }) {
             checkedAt: new Date().toLocaleTimeString()
         });
         setDocuments(data || []);
+        try {
+            setUnreadDocumentIds(await fetchUnreadDocumentIds());
+        } catch (activityError) {
+            showToast(activityError.message, 'error');
+        }
+    };
+
+    const openDocumentReview = async (document) => {
+        setSelectedDocument(document);
+        if (!unreadDocumentIds.has(document.id)) return;
+        setUnreadDocumentIds((current) => {
+            const next = new Set(current);
+            next.delete(document.id);
+            return next;
+        });
+        try {
+            await markDocumentActivityRead(document.id);
+        } catch (error) {
+            showToast(error.message, 'error');
+            setUnreadDocumentIds((current) => new Set(current).add(document.id));
+        }
     };
 
     useEffect(() => {
@@ -448,10 +471,12 @@ export default function VerifierDashboard({ profile, onLogout }) {
                                     filteredTracks.map((track) => {
                                         const meta = statusMeta[track.status] || statusMeta.pending_review;
                                         const collapsed = collapsedTracks[track.referenceId] !== false;
+                                        const trackHasUnreadActivity = track.documents.some((document) => unreadDocumentIds.has(document.id));
+                                        const trackBackground = trackHasUnreadActivity ? '#FFFBEB' : '#FFFFFF';
 
                                         return (
                                             <React.Fragment key={track.referenceId}>
-                                                <div style={{ display: 'grid', gridTemplateColumns: trackTableColumns, gap: '12px', padding: '14px 20px', borderTop: '1px solid #E2E8F0', alignItems: 'center' }}>
+                                                <div style={{ display: 'grid', gridTemplateColumns: trackTableColumns, gap: '12px', padding: '14px 20px', borderTop: '1px solid #E2E8F0', alignItems: 'center', background: trackBackground }}>
                                             <button onClick={() => setCollapsedTracks((current) => ({ ...current, [track.referenceId]: !collapsed }))} style={{ border: 'none', background: '#F1F5F9', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', color: '#334155', fontWeight: '800' }}>{collapsed ? '+' : '-'}</button>
                                             <div>
                                                 <p style={{ margin: 0, color: '#0F172A', fontWeight: '800', fontSize: '14px' }}>{track.referenceId}</p>
@@ -465,10 +490,10 @@ export default function VerifierDashboard({ profile, onLogout }) {
                                             <span style={{ color: '#475569', fontSize: '13px', fontWeight: '700' }}>{track.paymentMethod}</span>
                                             <span style={{ color: '#475569', fontSize: '13px' }}>{track.adBankName}</span>
                                             <span style={{ color: '#475569', fontSize: '13px' }}>{formatDate(track.submittedAt)}</span>
-                                            <div style={stickyStatusStyle}>
+                                            <div style={{ ...stickyStatusStyle, background: trackBackground, boxShadow: `-12px 0 0 ${trackBackground}, 12px 0 0 ${trackBackground}` }}>
                                                 <span style={{ width: 'fit-content', borderRadius: '999px', padding: '5px 10px', fontSize: '12px', fontWeight: '800', color: meta.color, background: meta.background, whiteSpace: 'nowrap' }}>{track.documents.some((document) => document.escalated_to_manager) ? 'Escalated' : meta.label}</span>
                                             </div>
-                                            <div style={stickyActionStyle}>
+                                            <div style={{ ...stickyActionStyle, background: trackBackground, boxShadow: `-12px 0 0 ${trackBackground}` }}>
                                                 <button onClick={() => setCollapsedTracks((current) => ({ ...current, [track.referenceId]: false }))} style={{ ...softBlueButtonStyle, width: 'fit-content', padding: '7px 10px' }}>View Files</button>
                                             </div>
                                         </div>
@@ -477,8 +502,10 @@ export default function VerifierDashboard({ profile, onLogout }) {
                                             <div style={{ background: '#FBFEFD', borderTop: '1px solid #E2E8F0', padding: '8px 20px 14px 64px' }}>
                                                 {track.documents.map((document) => {
                                                     const documentMeta = statusMeta[document.status] || statusMeta.pending_review;
+                                                    const documentHasUnreadActivity = unreadDocumentIds.has(document.id);
+                                                    const documentBackground = documentHasUnreadActivity ? '#FFFBEB' : '#FBFEFD';
                                                     return (
-                                                        <div key={document.id} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1.1fr 1.1fr 1fr 1.2fr', alignItems: 'center', gap: '12px', padding: '10px 0', borderTop: '1px solid #E2E8F0' }}>
+                                                        <div key={document.id} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1.1fr 1.1fr 1fr 1.2fr', alignItems: 'center', gap: '12px', padding: '10px 0', borderTop: '1px solid #E2E8F0', background: documentBackground }}>
                                                             <div>
                                                                 <p style={{ margin: 0, color: '#0F172A', fontWeight: '800', fontSize: '13px', overflowWrap: 'anywhere' }}>{document.file_name}</p>
                                                                 <p style={{ margin: '4px 0 0 0', color: '#94A3B8', fontSize: '12px' }}>{formatBytes(document.file_size)}</p>
@@ -488,8 +515,8 @@ export default function VerifierDashboard({ profile, onLogout }) {
                                                             </select>
                                                             <span style={{ color: '#475569', fontSize: '13px' }}>{formatDate(document.submitted_at)}</span>
                                                             <span style={{ width: 'fit-content', borderRadius: '999px', padding: '5px 10px', fontSize: '12px', fontWeight: '800', color: document.escalated_to_manager ? '#B91C1C' : documentMeta.color, background: document.escalated_to_manager ? '#FEE2E2' : documentMeta.background }}>{document.escalated_to_manager ? 'Escalated' : documentMeta.label}</span>
-                                                            <div style={stickyFileActionStyle}>
-                                                                <button onClick={() => setSelectedDocument(document)} style={{ ...softBlueButtonStyle, width: 'fit-content', padding: '7px 10px' }}>Review</button>
+                                                            <div style={{ ...stickyFileActionStyle, background: documentBackground, boxShadow: `-12px 0 0 ${documentBackground}` }}>
+                                                                <button onClick={() => openDocumentReview(document)} style={{ ...softBlueButtonStyle, width: 'fit-content', padding: '7px 10px' }}>Review</button>
                                                             </div>
                                                         </div>
                                                     );

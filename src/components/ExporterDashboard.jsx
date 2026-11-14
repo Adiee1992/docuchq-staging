@@ -7,6 +7,7 @@ import { pricingPlans } from '../data/pricingPlans';
 import { documentTypes } from '../data/documentTypes';
 import { companyDetails } from '../data/companyDetails';
 import { createDocumentSignedUrl } from '../utils/documentPreview';
+import { fetchUnreadDocumentIds, markDocumentActivityRead } from '../utils/documentActivity';
 import DocumentPreviewViewer from './DocumentPreviewViewer';
 import DashboardHowItWorksModal from './DashboardHowItWorksModal';
 import ReportIssueModal from './ReportIssueModal';
@@ -537,6 +538,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
     const [clearanceFiles, setClearanceFiles] = useState([]);
     const [collapsedTracks, setCollapsedTracks] = useState({});
     const [selectedDocument, setSelectedDocument] = useState(null);
+    const [unreadDocumentIds, setUnreadDocumentIds] = useState(() => new Set());
     const [previewUrl, setPreviewUrl] = useState('');
     const [previewingFile, setPreviewingFile] = useState(null);
     const [comments, setComments] = useState([]);
@@ -837,6 +839,11 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
         setCurrentPlan(resolvedPlan || null);
         const resolvedPlanActive = resolvedPlan?.status === 'active';
         setAvailableClearances(resolvedPlanActive ? Math.max(0, (resolvedPlan?.track_limit ?? fallbackCredits) - (resolvedPlan?.tracks_used ?? 0)) : 0);
+        try {
+            setUnreadDocumentIds(await fetchUnreadDocumentIds());
+        } catch (activityError) {
+            showToast(activityError.message, 'error');
+        }
     };
 
     useEffect(() => {
@@ -1161,6 +1168,19 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
 
     const loadPreview = async (document) => {
         setSelectedDocument(document);
+        if (unreadDocumentIds.has(document.id)) {
+            setUnreadDocumentIds((current) => {
+                const next = new Set(current);
+                next.delete(document.id);
+                return next;
+            });
+            try {
+                await markDocumentActivityRead(document.id);
+            } catch (error) {
+                showToast(error.message, 'error');
+                setUnreadDocumentIds((current) => new Set(current).add(document.id));
+            }
+        }
         setPreviewingFile(document);
         setPreviewUrl('');
         setComments([]);
@@ -1635,11 +1655,13 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                     const canDeleteTrack = Boolean(track.id)
                                         && track.status === 'pending_review'
                                         && track.documents.every((document) => document.status === 'pending_review');
+                                    const trackHasUnreadActivity = track.documents.some((document) => unreadDocumentIds.has(document.id));
+                                    const trackBackground = trackHasUnreadActivity ? '#FFFBEB' : '#FFFFFF';
 
                                     return (
                                         <React.Fragment key={track.referenceId}>
-                                            <div style={{ display: 'grid', gridTemplateColumns: trackTableColumns, padding: '14px 20px', borderTop: '1px solid #E2E8F0', alignItems: 'center', gap: '12px' }}>
-                                            <button onClick={() => setCollapsedTracks((current) => ({ ...current, [track.referenceId]: !collapsed }))} style={{ ...stickyToggleStyle, border: 'none', background: '#F1F5F9', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', color: '#334155', fontWeight: '800' }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: trackTableColumns, padding: '14px 20px', borderTop: '1px solid #E2E8F0', alignItems: 'center', gap: '12px', background: trackBackground }}>
+                                            <button onClick={() => setCollapsedTracks((current) => ({ ...current, [track.referenceId]: !collapsed }))} style={{ ...stickyToggleStyle, border: 'none', background: trackHasUnreadActivity ? '#FEF3C7' : '#F1F5F9', boxShadow: `12px 0 0 ${trackBackground}`, width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', color: '#334155', fontWeight: '800' }}>
                                                 {collapsed ? '+' : '-'}
                                             </button>
                                             <div>
@@ -1652,10 +1674,10 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                             <span style={{ color: '#475569', fontSize: '13px', fontWeight: '700' }}>{track.invoiceCurrency}</span>
                                             <span style={{ color: '#475569', fontSize: '13px', fontWeight: '700' }}>{track.paymentMethod}</span>
                                             <span style={{ color: '#475569', fontSize: '13px' }}>{formatDate(track.submittedAt)}</span>
-                                            <div style={stickyStatusStyle}>
+                                            <div style={{ ...stickyStatusStyle, background: trackBackground, boxShadow: `-12px 0 0 ${trackBackground}, 12px 0 0 ${trackBackground}` }}>
                                                 <span style={{ width: 'fit-content', borderRadius: '999px', padding: '5px 10px', fontSize: '12px', fontWeight: '800', color: meta.color, background: meta.background, whiteSpace: 'nowrap' }}>{meta.label}</span>
                                             </div>
-                                            <div style={{ ...stickyActionStyle, gap: '8px', flexWrap: 'wrap' }}>
+                                            <div style={{ ...stickyActionStyle, gap: '8px', flexWrap: 'wrap', background: trackBackground, boxShadow: `-12px 0 0 ${trackBackground}` }}>
                                                 <button onClick={() => openUploadModal(track)} style={{ ...softBlueButtonStyle, padding: '7px 10px' }}>Add File</button>
                                                 {canDeleteTrack && (
                                                     <button
@@ -1680,19 +1702,21 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                                     const documentMeta = statusMeta[document.status] || statusMeta.pending_review;
                                                     const canDelete = !lockedDeleteStatuses.includes(document.status);
                                                     const formattedVersion = formattedVersions.find((version) => version.document_id === document.id);
+                                                    const documentHasUnreadActivity = unreadDocumentIds.has(document.id);
+                                                    const documentBackground = documentHasUnreadActivity ? '#FFFBEB' : '#FBFEFD';
                                                     return (
-                                                        <div key={document.id} style={{ display: 'grid', gridTemplateColumns: trackTableColumns, alignItems: 'center', gap: '12px', padding: '10px 20px', borderTop: '1px solid #E2E8F0' }}>
-                                                            <span aria-hidden="true" style={stickyDocumentToggleStyle} />
+                                                        <div key={document.id} style={{ display: 'grid', gridTemplateColumns: trackTableColumns, alignItems: 'center', gap: '12px', padding: '10px 20px', borderTop: '1px solid #E2E8F0', background: documentBackground }}>
+                                                            <span aria-hidden="true" style={{ ...stickyDocumentToggleStyle, background: documentBackground, boxShadow: `12px 0 0 ${documentBackground}` }} />
                                                             <div style={{ gridColumn: '2 / span 3' }}>
                                                                 <p style={{ margin: 0, color: '#0F172A', fontSize: '13px', fontWeight: '800', overflowWrap: 'anywhere' }}>{document.file_name}</p>
                                                                 <p style={{ margin: '4px 0 0 0', color: '#94A3B8', fontSize: '12px' }}>{formatBytes(document.file_size)}</p>
                                                             </div>
                                                             <span style={{ gridColumn: '5 / span 3', color: '#475569', fontSize: '13px' }}>{document.document_type || '-'}</span>
                                                             <span style={{ gridColumn: '8', color: '#475569', fontSize: '13px' }}>{formatDate(document.submitted_at)}</span>
-                                                            <div style={{ ...stickyDocumentStatusStyle, gridColumn: '9' }}>
+                                                            <div style={{ ...stickyDocumentStatusStyle, gridColumn: '9', background: documentBackground, boxShadow: `-12px 0 0 ${documentBackground}, 12px 0 0 ${documentBackground}` }}>
                                                                 <span style={{ width: 'fit-content', borderRadius: '999px', padding: '5px 10px', fontSize: '12px', fontWeight: '800', color: documentMeta.color, background: documentMeta.background, whiteSpace: 'nowrap' }}>{documentMeta.label}</span>
                                                             </div>
-                                                            <div style={{ ...stickyDocumentActionStyle, gridColumn: '10', gap: '8px' }}>
+                                                            <div style={{ ...stickyDocumentActionStyle, gridColumn: '10', gap: '8px', background: documentBackground, boxShadow: `-12px 0 0 ${documentBackground}` }}>
                                                                 <button onClick={() => loadPreview(document)} style={{ ...softBlueButtonStyle, padding: '7px 10px' }}>Preview</button>
                                                                 {formattedVersion && <button type="button" onClick={() => downloadFormattedVersion(formattedVersion)} aria-label={`Download formatted version of ${document.file_name}`} title="Download formatted document" style={{ ...softBlueButtonStyle, width: '32px', height: '32px', padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg></button>}
                                                                 <button onClick={() => handleDeleteDocument(document)} disabled={!canDelete} style={{ border: '1px solid #FECACA', background: canDelete ? '#FEF2F2' : '#F8FAFC', color: canDelete ? '#B91C1C' : '#94A3B8', borderRadius: '6px', padding: '7px 10px', cursor: canDelete ? 'pointer' : 'not-allowed', fontWeight: '800', fontSize: '12px' }}>Delete</button>
