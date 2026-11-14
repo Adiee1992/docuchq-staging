@@ -35,7 +35,7 @@ export default function DashboardHowItWorksModal({ isOpen, onClose }) {
                     <section className="dashboard-guide-section">
                         <div className="dashboard-guide-section-heading">
                             <p className="guide-eyebrow">End-to-end workflow</p>
-                            <h3>From registration to clearance follow-up</h3>
+                            <h3>From clearance creation to document compliance</h3>
                             <p>Complete these stages in order for a clean, traceable document-review process.</p>
                         </div>
                         <div className="dashboard-guide-steps">

@@ -93,7 +93,7 @@ export default function HowItWorks({ onSignInClick }) {
                 <div className="guide-section-inner">
                     <div className="guide-section-heading">
                         <p className="guide-eyebrow">End-to-end workflow</p>
-                        <h2>From registration to clearance follow-up</h2>
+                        <h2>From clearance creation to document compliance</h2>
                         <p>Complete these stages in order for a clean, traceable document-review process.</p>
                     </div>
 
