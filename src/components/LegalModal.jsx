@@ -35,10 +35,6 @@ export default function LegalModal({ title, effectiveDate, sections, onClose }) 
                 </header>
 
                 <div style={{ padding: '24px 28px 30px', overflowY: 'auto', color: '#334155' }}>
-                    <div style={{ marginBottom: '24px', padding: '14px 16px', background: '#F8FAFC', borderLeft: '4px solid #49A8D8', fontSize: '13px', lineHeight: 1.6 }}>
-                        This document is an operational legal template for an India-only B2B service. It must be reviewed and completed by qualified Indian legal counsel before production use.
-                    </div>
-
                     {sections.map((section) => (
                         <section key={section.title} style={{ marginBottom: '22px' }}>
                             <h3 style={{ margin: '0 0 9px 0', color: '#0F172A', fontSize: '15px', lineHeight: 1.4 }}>{section.title}</h3>
@@ -52,4 +48,3 @@ export default function LegalModal({ title, effectiveDate, sections, onClose }) 
         </div>
     );
 }
-
