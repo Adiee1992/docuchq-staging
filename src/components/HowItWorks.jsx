@@ -9,6 +9,7 @@ export const howItWorksSteps = [
         details: [
             'Enter Buyer Name.',
             'Enter Country.',
+            'Select Currency.',
             'Enter Payment Method.'
         ],
         icon: 'track'
@@ -116,6 +117,7 @@ export default function HowItWorks({ onSignInClick }) {
                             </article>
                         ))}
                     </div>
+                    <p className="guide-illustration-note">Dashboard illustrations are provided for guidance only. Actual screens and available options may vary.</p>
                 </div>
             </section>
 
