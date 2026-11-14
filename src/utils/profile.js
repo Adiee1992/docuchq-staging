@@ -87,8 +87,7 @@ export async function ensureProfile(user) {
         mobile_number: metadata.mobile_number || '',
         address: metadata.address || '',
         gstin: metadata.gstin || '',
-        pan: metadata.pan || '',
-        role: metadata.role || 'exporter'
+        pan: metadata.pan || ''
     };
 
     const { data, error } = await supabase
