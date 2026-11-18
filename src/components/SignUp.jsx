@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../context/ToastContext';
 import googleLogo from '../assets/Google_logo.png';
@@ -34,11 +34,24 @@ export default function SignUp({ onSignInClick }) {
     const [companyName, setCompanyName] = useState('');
     const [loading, setLoading] = useState(false);
     const [isVerificationSent, setIsVerificationSent] = useState(false);
+    const [verificationEmail, setVerificationEmail] = useState('');
+    const [resendingVerification, setResendingVerification] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [privacyAccepted, setPrivacyAccepted] = useState(false);
     const [legalDocument, setLegalDocument] = useState(null);
 
     const { showToast } = useToast();
+
+    useEffect(() => {
+        if (resendCooldown <= 0) return undefined;
+
+        const timer = window.setTimeout(() => {
+            setResendCooldown((current) => Math.max(0, current - 1));
+        }, 1000);
+
+        return () => window.clearTimeout(timer);
+    }, [resendCooldown]);
 
     const clearForm = () => {
         setFirstName('');
@@ -65,6 +78,8 @@ export default function SignUp({ onSignInClick }) {
     const handleRegister = async (e) => {
         e.preventDefault();
 
+        const normalizedEmail = email.trim().toLowerCase();
+
         if (!passwordIsValid) {
             showToast('Please meet all password requirements and confirm your password.', 'error');
             return;
@@ -78,7 +93,7 @@ export default function SignUp({ onSignInClick }) {
         setLoading(true);
 
         const { data: authData, error: authError } = await supabase.auth.signUp({
-            email,
+            email: normalizedEmail,
             password,
             options: {
                 emailRedirectTo: `${window.location.origin}/auth/confirm`,
@@ -97,6 +112,7 @@ export default function SignUp({ onSignInClick }) {
         if (authError) {
             if (isExistingAccountResponse(authError)) {
                 showToast('Please check your email or sign in if you already have an account.', 'info');
+                setVerificationEmail(normalizedEmail);
                 setIsVerificationSent(true);
                 clearForm();
                 return;
@@ -108,6 +124,7 @@ export default function SignUp({ onSignInClick }) {
 
         if (authData?.user && !authData?.session) {
             showToast('Please check your email or sign in if you already have an account.', 'info');
+            setVerificationEmail(normalizedEmail);
             setIsVerificationSent(true);
             clearForm();
             return;
@@ -123,6 +140,35 @@ export default function SignUp({ onSignInClick }) {
                 showToast(getErrorMessage(profileError), 'error');
             }
         }
+    };
+
+    const handleResendVerification = async () => {
+        if (!verificationEmail || resendingVerification || resendCooldown > 0) return;
+
+        setResendingVerification(true);
+        const { error } = await supabase.auth.resend({
+            type: 'signup',
+            email: verificationEmail,
+            options: {
+                emailRedirectTo: `${window.location.origin}/auth/confirm`
+            }
+        });
+        setResendingVerification(false);
+
+        if (error) {
+            const errorText = `${error.code || ''} ${error.message || ''}`.toLowerCase();
+            if (errorText.includes('rate') || errorText.includes('seconds') || errorText.includes('too many')) {
+                setResendCooldown(60);
+                showToast('Please wait before requesting another verification email.', 'info');
+                return;
+            }
+
+            showToast('The verification email could not be resent. Please try again shortly.', 'error');
+            return;
+        }
+
+        setResendCooldown(60);
+        showToast('If this email is awaiting verification, a new verification link has been sent.', 'success');
     };
 
     const handleGoogleSignUp = async () => {
@@ -162,11 +208,17 @@ export default function SignUp({ onSignInClick }) {
                         If you already have an account, please sign in or use password recovery.
                     </p>
                     <button
-                        onClick={() => setIsVerificationSent(false)}
+                        type="button"
+                        onClick={handleResendVerification}
+                        disabled={resendingVerification || resendCooldown > 0 || !verificationEmail}
                         className="continue-btn"
-                        style={{ marginTop: '24px', backgroundColor: 'transparent', color: '#49A8D8', border: '1px solid #49A8D8' }}
+                        style={{ marginTop: '24px' }}
                     >
-                        Back to Sign Up
+                        {resendingVerification
+                            ? 'Sending...'
+                            : resendCooldown > 0
+                                ? `Resend available in ${resendCooldown}s`
+                                : 'Resend Verification Email'}
                     </button>
                 </div>
             </div>
