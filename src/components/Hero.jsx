@@ -11,7 +11,7 @@ export default function Hero({ onTalkToSales }) {
                 <Link to="/signup" className="primary-btn">
                     Start Your Free Trial
                 </Link>
-                <button type="button" className="secondary-btn" onClick={onTalkToSales}>Talk to Sales</button>
+                <button type="button" className="secondary-btn" onClick={onTalkToSales}>Contact Us</button>
             </div>
         </section>
     );

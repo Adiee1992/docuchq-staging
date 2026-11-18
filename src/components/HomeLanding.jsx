@@ -98,7 +98,7 @@ export default function HomeLanding({ onTalkToSales }) {
                         <p className="home-hero-lead">Built for Indian exporters to identify documentation discrepancies before bank submission.</p>
                         <div className="home-actions">
                             <Link to="/signup" className="home-primary-action">Start Your Free Trial <span aria-hidden="true">→</span></Link>
-                            <button type="button" className="home-secondary-action" onClick={onTalkToSales}>Talk to Sales</button>
+                            <button type="button" className="home-secondary-action" onClick={onTalkToSales}>Contact Us</button>
                         </div>
                     </div>
                     <div className="home-review-card" aria-hidden="true">
@@ -157,7 +157,7 @@ export default function HomeLanding({ onTalkToSales }) {
                         <p>Start using DocuCHQ to identify documentation discrepancies before bank submission.</p>
                         <div className="home-actions">
                             <Link to="/signup" className="home-primary-action">Start Your Free Trial <span aria-hidden="true">→</span></Link>
-                            <button type="button" className="home-secondary-action" onClick={onTalkToSales}>Talk to Sales</button>
+                            <button type="button" className="home-secondary-action" onClick={onTalkToSales}>Contact Us</button>
                         </div>
                     </div>
                 </div>

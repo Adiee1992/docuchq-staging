@@ -85,7 +85,7 @@ export default function SalesLeadModal({ isOpen, onClose }) {
             <form onSubmit={handleSubmit} style={{ width: 'min(620px, calc(100vw - 48px))', maxHeight: '90vh', overflowY: 'auto', boxSizing: 'border-box', padding: '28px 30px', borderRadius: '8px', background: '#FFFFFF', boxShadow: '0 24px 60px rgba(15,23,42,0.24)' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '24px' }}>
                     <div>
-                        <h2 id="sales-inquiry-title" style={{ margin: '0 0 6px', color: '#0F172A', fontSize: '22px' }}>Talk to Sales</h2>
+                        <h2 id="sales-inquiry-title" style={{ margin: '0 0 6px', color: '#0F172A', fontSize: '22px' }}>Contact Us</h2>
                         <p style={{ margin: 0, color: '#64748B', fontSize: '14px', lineHeight: 1.5 }}>Tell us about your business and how we can help.</p>
                     </div>
                     <button type="button" aria-label="Close sales inquiry" onClick={closeModal} style={{ border: 0, padding: '0 2px', background: 'transparent', color: '#64748B', cursor: 'pointer', fontSize: '24px', lineHeight: 1 }}>&times;</button>
