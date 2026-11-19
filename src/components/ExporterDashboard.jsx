@@ -1440,8 +1440,8 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
         });
         showToast(
             storageCleanupFailed
-                ? 'Track deleted, but one or more uploaded files could not be removed from storage.'
-                : 'Pending review track deleted.',
+                ? 'Track deleted and one clearance returned, but one or more uploaded files could not be removed from storage.'
+                : 'Pending review track deleted and one clearance returned.',
             storageCleanupFailed ? 'error' : 'success'
         );
         loadDocuments();
