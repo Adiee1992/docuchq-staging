@@ -2095,6 +2095,52 @@ input {
     border: 1px solid #e5e7eb;
 }
 
+.signup-mobile-field {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    margin-bottom: 4px;
+    overflow: hidden;
+    border: 1px solid #CBD5E1;
+    border-radius: 7px;
+    background: #FFFFFF;
+}
+
+.signup-mobile-field:focus-within {
+    border-color: #49A8D8;
+    box-shadow: 0 0 0 3px rgba(73, 168, 216, 0.14);
+}
+
+.signup-mobile-field > span {
+    padding: 0 12px;
+    border-right: 1px solid #E2E8F0;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.signup-card form .signup-mobile-field input {
+    width: 100%;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.signup-card form .signup-mobile-field input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.signup-field-help {
+    display: block;
+    margin: 6px 0 18px;
+    color: #64748B;
+    font-size: 11px;
+    line-height: 1.45;
+    text-align: left;
+}
+
     .signup-card h2 {
         font-size: 26px;
         font-weight: 700;

@@ -32,6 +32,7 @@ export default function SignUp({ onSignInClick }) {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [companyName, setCompanyName] = useState('');
+    const [mobileNumber, setMobileNumber] = useState('');
     const [loading, setLoading] = useState(false);
     const [isVerificationSent, setIsVerificationSent] = useState(false);
     const [verificationEmail, setVerificationEmail] = useState('');
@@ -60,6 +61,7 @@ export default function SignUp({ onSignInClick }) {
         setPassword('');
         setConfirmPassword('');
         setCompanyName('');
+        setMobileNumber('');
         setTermsAccepted(false);
         setPrivacyAccepted(false);
     };
@@ -79,6 +81,11 @@ export default function SignUp({ onSignInClick }) {
         e.preventDefault();
 
         const normalizedEmail = email.trim().toLowerCase();
+
+        if (mobileNumber.length !== 10) {
+            showToast('Enter a valid 10-digit Indian mobile number.', 'error');
+            return;
+        }
 
         if (!passwordIsValid) {
             showToast('Please meet all password requirements and confirm your password.', 'error');
@@ -101,6 +108,7 @@ export default function SignUp({ onSignInClick }) {
                     first_name: firstName,
                     last_name: lastName,
                     company_name: companyName,
+                    mobile_number: `+91${mobileNumber}`,
                     role: 'exporter',
                     ...buildLegalAcceptanceMetadata('password')
                 }
@@ -257,6 +265,25 @@ export default function SignUp({ onSignInClick }) {
                     <label htmlFor="email">Work Email</label>
                     <input type="email" id="email" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
 
+                    <label htmlFor="mobileNumber">Mobile Number</label>
+                    <div className="signup-mobile-field">
+                        <span aria-hidden="true">+91</span>
+                        <input
+                            type="tel"
+                            id="mobileNumber"
+                            placeholder="10-digit mobile number"
+                            value={mobileNumber}
+                            onChange={(event) => setMobileNumber(event.target.value.replace(/\D/g, '').slice(0, 10))}
+                            inputMode="numeric"
+                            autoComplete="tel-national"
+                            pattern="[0-9]{10}"
+                            maxLength="10"
+                            aria-describedby="mobile-number-help"
+                            required
+                        />
+                    </div>
+                    <span id="mobile-number-help" className="signup-field-help">Enter exactly 10 digits after +91.</span>
+
                     <label htmlFor="password">Password</label>
                     <input type="password" id="password" placeholder="At least 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} minLength="8" required />
 
@@ -300,7 +327,7 @@ export default function SignUp({ onSignInClick }) {
                         </label>
                     </div>
 
-                    <button type="submit" className="continue-btn" disabled={loading || !passwordIsValid || !legalAcceptanceIsValid}>
+                    <button type="submit" className="continue-btn" disabled={loading || mobileNumber.length !== 10 || !passwordIsValid || !legalAcceptanceIsValid}>
                         {loading ? 'Sending verification link...' : 'Create Account'}
                     </button>
                 </form>
