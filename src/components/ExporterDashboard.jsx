@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import JSZip from 'jszip';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../context/ToastContext';
 import { getTradeReviewProfile, riskProfileCountries, TradeReviewBadge } from '../utils/riskProfiles';
@@ -22,6 +23,25 @@ const statusMeta = {
     rejected: { label: 'Rejected', color: '#64748B', background: '#F1F5F9' },
     cancelled: { label: 'Cancelled', color: '#64748B', background: '#F1F5F9' }
 };
+
+function safeDownloadName(value, fallback = 'document') {
+    const normalized = String(value || fallback)
+        .replace(/[\\/:*?"<>|]+/g, '-')
+        .replace(/\s+/g, ' ')
+        .trim();
+    return normalized || fallback;
+}
+
+function triggerBlobDownload(blob, fileName) {
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+}
 
 const baseCountries = [
     'Afghanistan',
@@ -548,6 +568,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
     const [commentSubmitting, setCommentSubmitting] = useState(false);
     const [statusSubmitting, setStatusSubmitting] = useState(false);
     const [deletingTrackId, setDeletingTrackId] = useState(null);
+    const [downloadingFileKey, setDownloadingFileKey] = useState('');
     const [deleteTrackTarget, setDeleteTrackTarget] = useState(null);
     const [deleteTrackPassword, setDeleteTrackPassword] = useState('');
 
@@ -1238,21 +1259,73 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
         }
     };
 
-    const downloadFormattedVersion = async (version) => {
+    const fetchStoredFile = async (file, errorMessage) => {
+        const signedUrl = await createDocumentSignedUrl(supabase, file);
+        const response = await fetch(signedUrl);
+        if (!response.ok) throw new Error(errorMessage);
+        return response.blob();
+    };
+
+    const downloadPreferredDocument = async (document, formattedVersion) => {
+        const preferredFile = formattedVersion || document;
+        const downloadKey = `document:${document.id}`;
+        setDownloadingFileKey(downloadKey);
+
         try {
-            const signedUrl = await createDocumentSignedUrl(supabase, version);
-            const response = await fetch(signedUrl);
-            if (!response.ok) throw new Error('The formatted document could not be downloaded.');
-            const blobUrl = URL.createObjectURL(await response.blob());
-            const link = document.createElement('a');
-            link.href = blobUrl;
-            link.download = version.file_name || 'formatted-document';
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            URL.revokeObjectURL(blobUrl);
+            const blob = await fetchStoredFile(preferredFile, 'The document could not be downloaded.');
+            triggerBlobDownload(blob, safeDownloadName(preferredFile.file_name || document.file_name));
         } catch (error) {
             showToast(error.message, 'error');
+        } finally {
+            setDownloadingFileKey('');
+        }
+    };
+
+    const downloadCompliantTrack = async (track) => {
+        const trackIsCompliant = track.documents.length > 0
+            && track.documents.every((document) => document.status === 'approved');
+
+        if (!trackIsCompliant) {
+            showToast('All documents must be compliant before the clearance can be downloaded.', 'error');
+            return;
+        }
+
+        const downloadKey = `track:${track.id || track.referenceId}`;
+        setDownloadingFileKey(downloadKey);
+
+        try {
+            const zip = new JSZip();
+            const folderName = safeDownloadName(track.referenceId, 'clearance');
+            const folder = zip.folder(folderName);
+            const usedNames = new Set();
+
+            await Promise.all(track.documents.map(async (document, index) => {
+                const formattedVersion = formattedVersions.find((version) => version.document_id === document.id);
+                const preferredFile = formattedVersion || document;
+                const baseName = safeDownloadName(preferredFile.file_name || document.file_name, `document-${index + 1}`);
+                let uniqueName = baseName;
+                let duplicateNumber = 2;
+
+                while (usedNames.has(uniqueName.toLowerCase())) {
+                    const extensionIndex = baseName.lastIndexOf('.');
+                    const stem = extensionIndex > 0 ? baseName.slice(0, extensionIndex) : baseName;
+                    const extension = extensionIndex > 0 ? baseName.slice(extensionIndex) : '';
+                    uniqueName = `${stem} (${duplicateNumber})${extension}`;
+                    duplicateNumber += 1;
+                }
+                usedNames.add(uniqueName.toLowerCase());
+
+                const blob = await fetchStoredFile(preferredFile, `${baseName} could not be downloaded.`);
+                folder.file(uniqueName, blob);
+            }));
+
+            const archive = await zip.generateAsync({ type: 'blob' });
+            triggerBlobDownload(archive, `${folderName}.zip`);
+            showToast('Compliant clearance downloaded successfully.', 'success');
+        } catch (error) {
+            showToast(error.message || 'The clearance could not be downloaded.', 'error');
+        } finally {
+            setDownloadingFileKey('');
         }
     };
 
@@ -1655,6 +1728,8 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                     const canDeleteTrack = Boolean(track.id)
                                         && track.status === 'pending_review'
                                         && track.documents.every((document) => document.status === 'pending_review');
+                                    const trackIsCompliant = track.documents.length > 0
+                                        && track.documents.every((document) => document.status === 'approved');
                                     const trackHasUnreadActivity = track.documents.some((document) => unreadDocumentIds.has(document.id));
                                     const trackBackground = trackHasUnreadActivity ? '#FFFBEB' : '#FFFFFF';
 
@@ -1688,7 +1763,17 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                                         {deletingTrackId === track.id ? 'Deleting...' : 'Delete Track'}
                                                     </button>
                                                 )}
-                                                {track.documents.length > 0 && track.documents.every((document) => document.status === 'approved') && (
+                                                {trackIsCompliant && (
+                                                    <button
+                                                        type="button"
+                                                        disabled={Boolean(downloadingFileKey)}
+                                                        onClick={() => downloadCompliantTrack(track)}
+                                                        style={{ ...softBlueButtonStyle, padding: '7px 10px', cursor: downloadingFileKey ? 'not-allowed' : 'pointer', opacity: downloadingFileKey ? 0.65 : 1 }}
+                                                    >
+                                                        {downloadingFileKey === `track:${track.id || track.referenceId}` ? 'Preparing...' : 'Download All'}
+                                                    </button>
+                                                )}
+                                                {trackIsCompliant && (
                                                     <button disabled={statusSubmitting} onClick={() => markTrackClearanceIssue(track)} style={{ border: '1px solid #FECACA', background: '#FEF2F2', color: '#B91C1C', borderRadius: '6px', padding: '7px 10px', cursor: statusSubmitting ? 'not-allowed' : 'pointer', fontWeight: '800', fontSize: '12px' }}>Need Help</button>
                                                 )}
                                             </div>
@@ -1718,7 +1803,7 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                                             </div>
                                                             <div style={{ ...stickyDocumentActionStyle, gridColumn: '10', gap: '8px', background: documentBackground, boxShadow: `-12px 0 0 ${documentBackground}` }}>
                                                                 <button onClick={() => loadPreview(document)} style={{ ...softBlueButtonStyle, padding: '7px 10px' }}>Preview</button>
-                                                                {formattedVersion && <button type="button" onClick={() => downloadFormattedVersion(formattedVersion)} aria-label={`Download formatted version of ${document.file_name}`} title="Download formatted document" style={{ ...softBlueButtonStyle, width: '32px', height: '32px', padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg></button>}
+                                                                {trackIsCompliant && <button type="button" disabled={Boolean(downloadingFileKey)} onClick={() => downloadPreferredDocument(document, formattedVersion)} aria-label={`Download ${formattedVersion ? 'formatted' : 'original'} version of ${document.file_name}`} title={formattedVersion ? 'Download formatted document' : 'Download original document'} style={{ ...softBlueButtonStyle, padding: '7px 10px', cursor: downloadingFileKey ? 'not-allowed' : 'pointer', opacity: downloadingFileKey ? 0.65 : 1 }}>{downloadingFileKey === `document:${document.id}` ? 'Downloading...' : 'Download'}</button>}
                                                                 <button onClick={() => handleDeleteDocument(document)} disabled={!canDelete} style={{ border: '1px solid #FECACA', background: canDelete ? '#FEF2F2' : '#F8FAFC', color: canDelete ? '#B91C1C' : '#94A3B8', borderRadius: '6px', padding: '7px 10px', cursor: canDelete ? 'pointer' : 'not-allowed', fontWeight: '800', fontSize: '12px' }}>Delete</button>
                                                             </div>
                                                         </div>
@@ -2257,11 +2342,14 @@ export default function ExporterDashboard({ session, userProfile, onProfileUpdat
                                 title={previewingFile?.file_name || selectedDocument.file_name}
                                 toolbarAction={(() => {
                                     const formattedVersion = formattedVersions.find((version) => version.document_id === selectedDocument.id);
-                                    if (!formattedVersion || previewingFile?.id !== formattedVersion.id) return null;
+                                    const selectedTrack = tracks.find((track) => track.referenceId === selectedDocument.reference_id);
+                                    const selectedTrackIsCompliant = selectedTrack?.documents.length > 0
+                                        && selectedTrack.documents.every((document) => document.status === 'approved');
+                                    if (!selectedTrackIsCompliant) return null;
                                     return (
-                                        <button type="button" onClick={() => downloadFormattedVersion(formattedVersion)} style={{ ...softBlueButtonStyle, minHeight: '30px', padding: '5px 9px', display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                                        <button type="button" disabled={Boolean(downloadingFileKey)} onClick={() => downloadPreferredDocument(selectedDocument, formattedVersion)} style={{ ...softBlueButtonStyle, minHeight: '30px', padding: '5px 9px', display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', cursor: downloadingFileKey ? 'not-allowed' : 'pointer', opacity: downloadingFileKey ? 0.65 : 1 }}>
                                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M5 21h14" /></svg>
-                                            Download Formatted
+                                            {downloadingFileKey === `document:${selectedDocument.id}` ? 'Downloading...' : `Download ${formattedVersion ? 'Formatted' : 'Original'}`}
                                         </button>
                                     );
                                 })()}
