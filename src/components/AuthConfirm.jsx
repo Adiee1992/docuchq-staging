@@ -5,13 +5,6 @@ import { ensureProfile } from '../utils/profile';
 import { getErrorMessage } from '../utils/errors';
 import { recordLegalAcceptance } from '../utils/legalAcceptance';
 
-function getDashboardPath(role) {
-    if (role === 'verifier') return '/dashboard/verifier';
-    if (role === 'manager') return '/dashboard/manager';
-    if (role === 'admin') return '/dashboard/admin';
-    return '/dashboard/exporter';
-}
-
 export default function AuthConfirm() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -25,21 +18,27 @@ export default function AuthConfirm() {
         const token_hash = searchParams.get('token_hash');
         const code = searchParams.get('code');
         const type = searchParams.get('type') || 'signup';
-        const redirectAfter = (path, delay) => {
-            window.setTimeout(() => navigate(path), delay);
+        const openHomeResult = async (result) => {
+            await supabase.auth.signOut({ scope: 'local' });
+            navigate('/', { replace: true, state: { authResult: result } });
         };
 
-        const finishAccountSetup = async (user) => {
+        const finishVerification = async (user) => {
+            if (type === 'email_change') {
+                setStatusMessage(user?.new_email ? 'First email confirmation received...' : 'Email address updated successfully...');
+                await openHomeResult(user?.new_email ? 'email_change_pending' : 'email_changed');
+                return;
+            }
+
             try {
-                const profile = await ensureProfile(user);
+                await ensureProfile(user);
                 await recordLegalAcceptance(user, user?.app_metadata?.provider === 'google' ? 'google' : 'password');
-                setStatusMessage('Email verified successfully! Opening workspace...');
-                redirectAfter(getDashboardPath(profile?.role), 1500);
+                setStatusMessage('Email verified successfully...');
             } catch (setupError) {
                 console.error('Post-verification setup error:', getErrorMessage(setupError));
-                setStatusMessage('Your email is verified. Please sign in to continue.');
-                redirectAfter('/', 2500);
             }
+
+            await openHomeResult('email_verified');
         };
 
         const completeVerification = async () => {
@@ -47,7 +46,7 @@ export default function AuthConfirm() {
                 const { data, error } = await supabase.auth.exchangeCodeForSession(code);
                 if (error) throw error;
 
-                await finishAccountSetup(data.session?.user);
+                await finishVerification(data.session?.user);
                 return;
             }
 
@@ -55,19 +54,19 @@ export default function AuthConfirm() {
                 const { data, error } = await supabase.auth.verifyOtp({ token_hash, type });
                 if (error) throw error;
 
-                await finishAccountSetup(data.user);
+                await finishVerification(data.user);
                 return;
             }
 
             const { data: { session: existingSession } } = await supabase.auth.getSession();
 
             if (existingSession) {
-                await finishAccountSetup(existingSession.user);
+                await finishVerification(existingSession.user);
                 return;
             }
 
             setStatusMessage('No verification parameters detected.');
-            redirectAfter('/', 2000);
+            window.setTimeout(() => navigate('/', { replace: true }), 2000);
         };
 
         completeVerification().catch(async (error) => {
@@ -75,12 +74,12 @@ export default function AuthConfirm() {
 
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
-                await finishAccountSetup(session.user);
+                await finishVerification(session.user);
                 return;
             }
 
             setStatusMessage('Verification could not be completed. Please sign in again.');
-            redirectAfter('/', 2500);
+            window.setTimeout(() => navigate('/', { replace: true }), 2500);
         });
     }, [searchParams, navigate]);
 

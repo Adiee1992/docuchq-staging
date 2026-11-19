@@ -14,6 +14,7 @@ import AuthConfirm from './components/AuthConfirm';
 import ResetPassword from './components/ResetPassword';
 import SalesLeadModal from './components/SalesLeadModal';
 import LegalAcceptanceGate from './components/LegalAcceptanceGate';
+import AuthResultModal from './components/AuthResultModal';
 import { supabase } from './supabaseClient';
 import { ensureProfile } from './utils/profile';
 import { getErrorMessage } from './utils/errors';
@@ -45,6 +46,17 @@ function AppContent() {
     const [profile, setProfile] = useState(null);
     const [authLoading, setAuthLoading] = useState(true);
     const navigate = useNavigate();
+    const location = useLocation();
+    const authResult = location.state?.authResult || null;
+
+    const clearAuthResult = () => {
+        if (authResult) navigate('/', { replace: true, state: null });
+    };
+
+    const openSignInFromResult = () => {
+        clearAuthResult();
+        setIsModalOpen(true);
+    };
 
     useEffect(() => {
         let isMounted = true;
@@ -231,6 +243,7 @@ function AppContent() {
                 onSignInSuccess={handleSignInSuccess}
             />
             <SalesLeadModal isOpen={salesModalOpen} onClose={() => setSalesModalOpen(false)} />
+            <AuthResultModal result={authResult} onSignIn={openSignInFromResult} onClose={clearAuthResult} />
         </>
     );
 }

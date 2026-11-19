@@ -1190,6 +1190,90 @@ input {
     box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
 }
 
+.password-reset-brand,
+.auth-result-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 auto 26px;
+    color: #0F172A;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -0.04em;
+}
+
+.password-reset-brand img,
+.auth-result-brand img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.auth-result-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.52);
+    backdrop-filter: blur(3px);
+}
+
+.auth-result-modal {
+    position: relative;
+    width: min(440px, calc(100vw - 32px));
+    padding: 38px 36px 34px;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    background: #FFFFFF;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+    text-align: center;
+}
+
+.auth-result-close {
+    position: absolute;
+    top: 13px;
+    right: 16px;
+    border: 0;
+    background: transparent;
+    color: #64748B;
+    cursor: pointer;
+    font-size: 26px;
+    line-height: 1;
+}
+
+.auth-result-check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 62px;
+    height: 62px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    background: #E8F7EF;
+    color: #16834A;
+}
+
+.auth-result-modal h2 {
+    margin: 0 0 12px;
+    color: #0F172A;
+    font-size: 24px;
+}
+
+.auth-result-modal p {
+    margin: 0 0 26px;
+    color: #64748B;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.auth-result-modal .continue-btn {
+    width: 100%;
+}
+
 .password-reset-card h2 {
     margin: 0 0 8px;
     color: #0F172A;
@@ -2181,8 +2265,13 @@ input {
         background: linear-gradient(90deg, #ffffff 94%, #fff1f2 100%);
     }
 
+    .toast-notification.info {
+        border-left-color: #49A8D8;
+        background: linear-gradient(90deg, #ffffff 94%, #f0f9ff 100%);
+    }
+
     /* Elegant Text Styling inside the Toast */
-    .toast-notification span {
+    .toast-notification .toast-icon {
         font-size: 18px;
         display: flex;
         align-items: center;

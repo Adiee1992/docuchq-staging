@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../context/ToastContext';
 import { getErrorMessage } from '../utils/errors';
+import logoIcon from '../assets/Logo_Header-Trans.png';
 
 export default function ResetPassword() {
     const [searchParams] = useSearchParams();
@@ -80,6 +81,10 @@ export default function ResetPassword() {
     return (
         <div className="password-reset-page">
             <section className="password-reset-card">
+                <div className="password-reset-brand" aria-label="DocuCHQ">
+                    <img src={logoIcon} alt="" aria-hidden="true" />
+                    <span><span className="brand-docu">Docu</span><span className="brand-chq">CHQ</span></span>
+                </div>
                 {checkingLink ? (
                     <>
                         <h2>Checking reset link</h2>
